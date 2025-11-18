@@ -46,11 +46,11 @@ echo ""
 # Add remote (if not exists)
 if ! git remote get-url origin &> /dev/null; then
     echo "🔗 Adding GitHub remote..."
-    git remote add origin git@github.com:shamarrz/hairven.git
+    git remote add origin git@github.com-hairven:shamarrz/hairven.git
     echo "✅ Remote added"
 else
     echo "✅ Remote already configured"
-    git remote set-url origin git@github.com:shamarrz/hairven.git
+    git remote set-url origin git@github.com-hairven:shamarrz/hairven.git
 fi
 echo ""
 
