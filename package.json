@@ -9,7 +9,10 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write \"src/**/*.{js,ts,svelte,css}\"",
-    "format:check": "prettier --check \"src/**/*.{js,ts,svelte,css}\""
+    "format:check": "prettier --check \"src/**/*.{js,ts,svelte,css}\"",
+    "translate": "tsx scripts/translate-posts.ts",
+    "translate:es": "tsx scripts/translate-posts.ts --languages=es",
+    "translate:fr": "tsx scripts/translate-posts.ts --languages=fr"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.0",

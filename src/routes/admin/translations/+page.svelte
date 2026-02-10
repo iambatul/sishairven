@@ -1,683 +1,369 @@
 <script lang="ts">
+  /**
+   * Translation Management Page
+   * 
+   * Manage blog post translations and translation jobs.
+   * 
+   * @component TranslationsPage
+   * @author Hairven Dev Team
+   * @since 2026-02-10
+   */
+  
   import { onMount } from 'svelte';
-  import { fade, slide } from 'svelte/transition';
-  import { _ } from 'svelte-i18n';
-
-  // =============================================================================
-  // TYPES
-  // =============================================================================
+  import { 
+    translationsStore, 
+    translationJobsStore,
+    fetchTranslations,
+    triggerTranslation,
+    loadingStore
+  } from '$lib/admin/stores';
   
-  interface PostStatus {
-    slug: string;
-    title: string;
-    category: string;
-    es: {
-      status: string | null;
-      qualityScore: number;
-      translatedAt: string | null;
-    };
-    fr: {
-      status: string | null;
-      qualityScore: number;
-      translatedAt: string | null;
-    };
-    isComplete: boolean;
-    needsUpdate: boolean;
-  }
-
-  interface Stats {
-    totalPosts: number;
-    translatedPosts: number;
-    pendingTranslations: number;
-    failedTranslations: number;
-    averageQualityScore: number;
-    completionPercentage: number;
-    lastBatchRun: string | null;
-  }
-
-  interface BatchJob {
-    id: string;
-    status: 'running' | 'completed' | 'failed';
-    progress: number;
-    totalPosts: number;
-    completedPosts: number;
-  }
-
-  // =============================================================================
-  // STATE
-  // =============================================================================
+  // Language configurations
+  const languages = [
+    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'pt', name: 'Portuguese', flag: '🇧🇷' },
+    { code: 'it', name: 'Italian', flag: '🇮🇹' },
+  ];
   
-  let posts: PostStatus[] = [];
-  let stats: Stats | null = null;
-  let activeBatchJob: BatchJob | null = null;
-  let loading = true;
-  let error: string | null = null;
-  let selectedLanguage: 'es' | 'fr' | 'both' = 'both';
-  let searchQuery = '';
-  let statusFilter: 'all' | 'complete' | 'incomplete' | 'needs-update' | 'failed' = 'all';
-  let showPreviewModal = false;
-  let previewPost: PostStatus | null = null;
-  let isTranslating = false;
-  let translationMessage = '';
-  let adminKey = '';
-  let showAdminKeyInput = false;
-
-  // =============================================================================
-  // API FUNCTIONS
-  // =============================================================================
+  // Status configurations
+  const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
+    completed: { label: 'Completed', color: 'text-green-400', bg: 'bg-green-500/20' },
+    in_progress: { label: 'In Progress', color: 'text-blue-400', bg: 'bg-blue-500/20' },
+    pending: { label: 'Pending', color: 'text-gray-400', bg: 'bg-gray-500/20' },
+    failed: { label: 'Failed', color: 'text-red-400', bg: 'bg-red-500/20' },
+    queued: { label: 'Queued', color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
+    processing: { label: 'Processing', color: 'text-purple-400', bg: 'bg-purple-500/20' },
+  };
   
-  const API_KEY = 'dev-key-change-in-production'; // In production, this should be securely managed
-
-  async function fetchTranslationStatus() {
-    try {
-      const response = await fetch('/api/admin/translation-status', {
-        headers: {
-          'Authorization': `Bearer ${adminKey || API_KEY}`
-        }
-      });
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          showAdminKeyInput = true;
-          throw new Error('Authentication required');
-        }
-        throw new Error('Failed to fetch translation status');
-      }
-      
-      const data = await response.json();
-      posts = data.posts;
-      stats = data.stats;
-      activeBatchJob = data.activeBatchJob;
-      error = null;
-    } catch (err) {
-      error = err instanceof Error ? err.message : 'Unknown error';
-    } finally {
-      loading = false;
-    }
-  }
-
-  async function translatePost(slug: string, languages: string[]) {
-    isTranslating = true;
-    translationMessage = `Translating ${slug}...`;
-    
-    try {
-      const response = await fetch('/api/admin/translate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminKey || API_KEY}`
-        },
-        body: JSON.stringify({ slug, languages })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Translation request failed');
-      }
-      
-      const data = await response.json();
-      translationMessage = data.message;
-      
-      // Refresh status after a short delay
-      setTimeout(fetchTranslationStatus, 2000);
-    } catch (err) {
-      translationMessage = err instanceof Error ? err.message : 'Translation failed';
-    } finally {
-      setTimeout(() => {
-        isTranslating = false;
-        translationMessage = '';
-      }, 3000);
-    }
-  }
-
-  async function translateBatch() {
-    isTranslating = true;
-    translationMessage = 'Starting batch translation...';
-    
-    const languages = selectedLanguage === 'both' ? ['es', 'fr'] : [selectedLanguage];
-    
-    try {
-      const response = await fetch('/api/admin/translate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminKey || API_KEY}`
-        },
-        body: JSON.stringify({ batch: true, languages })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Batch translation request failed');
-      }
-      
-      const data = await response.json();
-      translationMessage = data.message;
-      
-      // Start polling for progress
-      if (data.batchJobId) {
-        pollBatchProgress(data.batchJobId);
-      }
-    } catch (err) {
-      translationMessage = err instanceof Error ? err.message : 'Batch translation failed';
-      isTranslating = false;
-    }
-  }
-
-  async function pollBatchProgress(jobId: string) {
-    const checkProgress = async () => {
-      try {
-        const response = await fetch(`/api/admin/translation-status?batchJobId=${jobId}`, {
-          headers: {
-            'Authorization': `Bearer ${adminKey || API_KEY}`
-          }
-        });
-        
-        if (response.ok) {
-          const job = await response.json();
-          activeBatchJob = job;
-          translationMessage = `Batch progress: ${job.progress}% (${job.completedPosts}/${job.totalPosts})`;
-          
-          if (job.status === 'running') {
-            setTimeout(checkProgress, 3000);
-          } else {
-            isTranslating = false;
-            translationMessage = job.status === 'completed' ? 'Batch translation completed!' : 'Batch translation finished with errors';
-            fetchTranslationStatus();
-            setTimeout(() => { translationMessage = ''; }, 3000);
-          }
-        }
-      } catch (err) {
-        console.error('Error polling batch progress:', err);
-      }
-    };
-    
-    checkProgress();
-  }
-
-  // =============================================================================
-  // COMPUTED VALUES
-  // =============================================================================
+  // State
+  let selectedPost: string | null = null;
+  let selectedLanguage: string | null = null;
+  let showTriggerModal = false;
+  let isTriggering = false;
   
-  $: filteredPosts = posts.filter(post => {
+  // Filter state
+  let filterStatus: string = 'all';
+  let searchQuery: string = '';
+  
+  // Get filtered posts
+  $: filteredPosts = $translationsStore.filter(post => {
     // Search filter
-    if (searchQuery && !post.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-        !post.slug.toLowerCase().includes(searchQuery.toLowerCase())) {
+    if (searchQuery && !post.title.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
     
     // Status filter
-    if (statusFilter === 'complete' && !post.isComplete) return false;
-    if (statusFilter === 'incomplete' && post.isComplete) return false;
-    if (statusFilter === 'needs-update' && !post.needsUpdate) return false;
-    if (statusFilter === 'failed' && 
-        post.es.status !== 'failed' && post.fr.status !== 'failed') return false;
+    if (filterStatus !== 'all') {
+      const hasStatus = post.translations.some(t => t.status === filterStatus);
+      if (!hasStatus) return false;
+    }
     
     return true;
   });
-
-  $: completedCount = posts.filter(p => p.isComplete).length;
-  $: needsUpdateCount = posts.filter(p => p.needsUpdate).length;
-  $: failedCount = posts.filter(p => p.es.status === 'failed' || p.fr.status === 'failed').length;
-
-  // =============================================================================
-  // HELPERS
-  // =============================================================================
   
-  function getStatusIcon(status: string | null): string {
+  // Get translation progress for a post
+  function getTranslationProgress(post: typeof $translationsStore[0]): number {
+    const completed = post.translations.filter(t => t.status === 'completed').length;
+    return Math.round((completed / post.translations.length) * 100);
+  }
+  
+  // Get status icon
+  function getStatusIcon(status: string): string {
     switch (status) {
       case 'completed': return '✓';
-      case 'in_progress': return '⟳';
+      case 'in_progress': return '◐';
+      case 'processing': return '◐';
       case 'pending': return '○';
+      case 'queued': return '⏳';
       case 'failed': return '✗';
-      case 'outdated': return '!';
-      default: return '-';
+      default: return '○';
     }
   }
-
-  function getStatusColor(status: string | null): string {
-    switch (status) {
-      case 'completed': return 'text-green-400';
-      case 'in_progress': return 'text-yellow-400';
-      case 'pending': return 'text-gray-400';
-      case 'failed': return 'text-red-400';
-      case 'outdated': return 'text-orange-400';
-      default: return 'text-gray-600';
+  
+  // Open trigger modal
+  function openTriggerModal(post: typeof $translationsStore[0], langCode: string) {
+    selectedPost = post.slug;
+    selectedLanguage = langCode;
+    showTriggerModal = true;
+  }
+  
+  // Close trigger modal
+  function closeTriggerModal() {
+    showTriggerModal = false;
+    selectedPost = null;
+    selectedLanguage = null;
+  }
+  
+  // Trigger translation
+  async function handleTriggerTranslation() {
+    if (!selectedPost || !selectedLanguage) return;
+    
+    isTriggering = true;
+    const success = await triggerTranslation(selectedPost, selectedLanguage);
+    
+    if (success) {
+      await fetchTranslations();
+      closeTriggerModal();
+    } else {
+      alert('Failed to trigger translation. Please try again.');
+    }
+    
+    isTriggering = false;
+  }
+  
+  // Cancel job
+  async function cancelJob(jobId: string) {
+    try {
+      const response = await fetch(`/api/admin/translations?jobId=${jobId}`, {
+        method: 'DELETE'
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        await fetchTranslations();
+      }
+    } catch (error) {
+      console.error('Failed to cancel job:', error);
     }
   }
-
-  function getQualityBadgeClass(score: number): string {
-    if (score >= 90) return 'bg-green-500/20 text-green-400';
-    if (score >= 70) return 'bg-yellow-500/20 text-yellow-400';
-    return 'bg-red-500/20 text-red-400';
+  
+  // Refresh data
+  async function refreshData() {
+    loadingStore.update(l => ({ ...l, translations: true }));
+    await fetchTranslations();
+    loadingStore.update(l => ({ ...l, translations: false }));
   }
-
-  function formatDate(dateString: string | null): string {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  // =============================================================================
-  // LIFECYCLE
-  // =============================================================================
   
   onMount(() => {
-    fetchTranslationStatus();
+    refreshData();
     
-    // Refresh every 30 seconds if there's an active batch job
-    const interval = setInterval(() => {
-      if (activeBatchJob?.status === 'running') {
-        fetchTranslationStatus();
-      }
-    }, 30000);
-    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(refreshData, 30000);
     return () => clearInterval(interval);
   });
 </script>
 
-<!-- Admin Key Input Modal -->
-{#if showAdminKeyInput}
-  <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" transition:fade>
-    <div class="bg-black-soft p-6 rounded-lg max-w-md w-full mx-4 border border-gray-dark">
-      <h2 class="text-xl font-bold text-white mb-4">Authentication Required</h2>
-      <p class="text-gray-300 mb-4">Please enter your admin API key to access the translation management system.</p>
-      <input
-        type="password"
-        bind:value={adminKey}
-        placeholder="Enter admin API key"
-        class="w-full px-4 py-2 bg-black border border-gray-dark rounded-lg text-white placeholder-gray-500 focus:border-pink-bright focus:outline-none mb-4"
-      />
-      <button
-        on:click={() => { showAdminKeyInput = false; fetchTranslationStatus(); }}
-        class="w-full px-4 py-2 bg-pink-bright text-black font-semibold rounded-lg hover:bg-pink-medium transition-colors"
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-semibold text-white">Translation Management</h2>
+      <p class="text-gray-medium mt-1">Manage blog post translations and monitor translation jobs</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button 
+        on:click={refreshData}
+        class="flex items-center gap-2 px-4 py-2 bg-black-soft border border-gray-dark rounded-lg text-white hover:border-pink-bright transition-colors"
+        disabled={$loadingStore.translations}
       >
-        Access Dashboard
+        <svg class="w-4 h-4" class:animate-spin={$loadingStore.translations} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Refresh
       </button>
     </div>
   </div>
-{/if}
-
-<div class="min-h-screen bg-black">
-  <!-- Header -->
-  <header class="bg-black-soft border-b border-gray-dark">
-    <div class="max-w-7xl mx-auto px-4 py-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-display text-white">Translation Management</h1>
-          <p class="text-gray-400 mt-1">Manage blog post translations to Spanish and French</p>
-        </div>
-        <a href="/" class="text-gray-400 hover:text-pink-bright transition-colors">
-          ← Back to Site
-        </a>
+  
+  <!-- Active Jobs Section -->
+  {#if $translationJobsStore.length > 0}
+    <div class="bg-black-soft rounded-xl border border-gray-dark/50 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-dark/50">
+        <h3 class="text-lg font-semibold text-white">Active Translation Jobs</h3>
       </div>
-    </div>
-  </header>
-
-  <main class="max-w-7xl mx-auto px-4 py-8">
-    {#if loading}
-      <div class="flex items-center justify-center py-20">
-        <div class="text-center">
-          <div class="animate-spin text-4xl mb-4">⟳</div>
-          <p class="text-gray-400">Loading translation status...</p>
-        </div>
-      </div>
-    {:else if error}
-      <div class="bg-red-500/10 border border-red-500/50 rounded-lg p-6 text-center">
-        <p class="text-red-400">{error}</p>
-        <button
-          on:click={fetchTranslationStatus}
-          class="mt-4 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    {:else}
-      <!-- Stats Cards -->
-      {#if stats}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div class="bg-black-soft rounded-lg p-4 border border-gray-dark">
-            <p class="text-gray-400 text-sm">Completion</p>
-            <p class="text-2xl font-bold text-white">{stats.completionPercentage}%</p>
-            <div class="mt-2 h-2 bg-gray-dark rounded-full overflow-hidden">
-              <div
-                class="h-full bg-pink-bright transition-all duration-500"
-                style="width: {stats.completionPercentage}%"
-              ></div>
+      <div class="divide-y divide-gray-dark/30">
+        {#each $translationJobsStore as job}
+          <div class="px-6 py-4 flex items-center justify-between hover:bg-black/30 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center {statusConfig[job.status]?.bg || 'bg-gray-500/20'}">
+                <span class="text-lg">{getStatusIcon(job.status)}</span>
+              </div>
+              <div>
+                <p class="text-white font-medium">{job.slug}</p>
+                <p class="text-sm text-gray-medium">
+                  {languages.find(l => l.code === job.targetLanguage)?.flag} 
+                  {languages.find(l => l.code === job.targetLanguage)?.name}
+                  • Started {job.startedAt ? new Date(job.startedAt).toLocaleTimeString() : 'Queued'}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              {#if job.status === 'processing' || job.status === 'in_progress'}
+                <div class="w-32">
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-medium">Progress</span>
+                    <span class="text-white">{job.progress}%</span>
+                  </div>
+                  <div class="h-2 bg-gray-dark rounded-full overflow-hidden">
+                    <div class="h-full bg-pink-bright rounded-full transition-all" style="width: {job.progress}%"></div>
+                  </div>
+                </div>
+              {/if}
+              {#if job.status === 'queued' || job.status === 'processing'}
+                <button 
+                  on:click={() => cancelJob(job.id)}
+                  class="text-red-400 hover:text-red-300 transition-colors"
+                  title="Cancel job"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              {/if}
             </div>
           </div>
-          
-          <div class="bg-black-soft rounded-lg p-4 border border-gray-dark">
-            <p class="text-gray-400 text-sm">Translated</p>
-            <p class="text-2xl font-bold text-green-400">{stats.translatedPosts}</p>
-            <p class="text-xs text-gray-500">of {stats.totalPosts * 2} variants</p>
-          </div>
-          
-          <div class="bg-black-soft rounded-lg p-4 border border-gray-dark">
-            <p class="text-gray-400 text-sm">Avg Quality</p>
-            <p class="text-2xl font-bold {getQualityBadgeClass(stats.averageQualityScore).split(' ')[1]}">
-              {stats.averageQualityScore}%
-            </p>
-            <p class="text-xs text-gray-500">quality score</p>
-          </div>
-          
-          <div class="bg-black-soft rounded-lg p-4 border border-gray-dark">
-            <p class="text-gray-400 text-sm">Pending</p>
-            <p class="text-2xl font-bold text-yellow-400">{stats.pendingTranslations}</p>
-            <p class="text-xs text-gray-500">
-              {#if stats.lastBatchRun}
-                Last run: {formatDate(stats.lastBatchRun)}
-              {:else}
-                Never run
-              {/if}
-            </p>
-          </div>
-        </div>
-      {/if}
-
-      <!-- Active Batch Job -->
-      {#if activeBatchJob}
-        <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-8" transition:slide>
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold text-yellow-400">Batch Translation in Progress</h3>
-            <span class="text-yellow-400 animate-pulse">⟳ Running</span>
-          </div>
-          <div class="h-2 bg-gray-dark rounded-full overflow-hidden">
-            <div
-              class="h-full bg-yellow-400 transition-all duration-500"
-              style="width: {activeBatchJob.progress}%"
-            ></div>
-          </div>
-          <p class="text-sm text-gray-400 mt-2">
-            {activeBatchJob.completedPosts} of {activeBatchJob.totalPosts} posts completed
-            ({activeBatchJob.progress}%)
-          </p>
-        </div>
-      {/if}
-
-      <!-- Translation Message -->
-      {#if translationMessage}
-        <div class="bg-pink-bright/10 border border-pink-bright/30 rounded-lg p-4 mb-8" transition:slide>
-          <p class="text-pink-bright">{translationMessage}</p>
-        </div>
-      {/if}
-
-      <!-- Controls -->
-      <div class="bg-black-soft rounded-lg p-4 border border-gray-dark mb-8">
-        <div class="flex flex-wrap items-center gap-4">
-          <!-- Search -->
-          <div class="flex-1 min-w-[200px]">
-            <input
-              type="text"
-              bind:value={searchQuery}
-              placeholder="Search posts..."
-              class="w-full px-4 py-2 bg-black border border-gray-dark rounded-lg text-white placeholder-gray-500 focus:border-pink-bright focus:outline-none"
-            />
-          </div>
-          
-          <!-- Status Filter -->
-          <select
-            bind:value={statusFilter}
-            class="px-4 py-2 bg-black border border-gray-dark rounded-lg text-white focus:border-pink-bright focus:outline-none"
-          >
-            <option value="all">All Posts</option>
-            <option value="complete">Complete</option>
-            <option value="incomplete">Incomplete</option>
-            <option value="needs-update">Needs Update</option>
-            <option value="failed">Failed</option>
-          </select>
-          
-          <!-- Language Selector -->
-          <select
-            bind:value={selectedLanguage}
-            class="px-4 py-2 bg-black border border-gray-dark rounded-lg text-white focus:border-pink-bright focus:outline-none"
-          >
-            <option value="both">Spanish & French</option>
-            <option value="es">Spanish Only</option>
-            <option value="fr">French Only</option>
-          </select>
-          
-          <!-- Batch Translate Button -->
-          <button
-            on:click={translateBatch}
-            disabled={isTranslating}
-            class="px-6 py-2 bg-pink-bright text-black font-semibold rounded-lg hover:bg-pink-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isTranslating ? 'Translating...' : 'Translate All'}
-          </button>
-        </div>
-        
-        <!-- Quick Stats -->
-        <div class="flex gap-6 mt-4 text-sm">
-          <span class="text-gray-400">
-            <span class="text-green-400 font-semibold">{completedCount}</span> Complete
-          </span>
-          <span class="text-gray-400">
-            <span class="text-orange-400 font-semibold">{needsUpdateCount}</span> Outdated
-          </span>
-          <span class="text-gray-400">
-            <span class="text-red-400 font-semibold">{failedCount}</span> Failed
-          </span>
-          <span class="text-gray-400">
-            Showing <span class="text-white font-semibold">{filteredPosts.length}</span> posts
-          </span>
-        </div>
+        {/each}
       </div>
-
-      <!-- Posts Table -->
-      <div class="bg-black-soft rounded-lg border border-gray-dark overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b border-gray-dark bg-black/50">
-                <th class="text-left py-3 px-4 text-gray-400 font-medium">Post</th>
-                <th class="text-center py-3 px-4 text-gray-400 font-medium w-32">Spanish (ES)</th>
-                <th class="text-center py-3 px-4 text-gray-400 font-medium w-32">French (FR)</th>
-                <th class="text-center py-3 px-4 text-gray-400 font-medium w-24">Status</th>
-                <th class="text-right py-3 px-4 text-gray-400 font-medium w-32">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each filteredPosts as post}
-                <tr class="border-b border-gray-dark/50 hover:bg-white/5 transition-colors">
-                  <td class="py-3 px-4">
-                    <div>
-                      <p class="text-white font-medium">{post.title}</p>
-                      <p class="text-xs text-gray-500">{post.slug}</p>
-                      <span class="inline-block mt-1 px-2 py-0.5 bg-gray-dark rounded text-xs text-gray-400">
-                        {post.category}
-                      </span>
-                      {#if post.needsUpdate}
-                        <span class="inline-block mt-1 ml-2 px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs">
-                          Update Needed
-                        </span>
-                      {/if}
-                    </div>
-                  </td>
-                  
-                  <td class="py-3 px-4 text-center">
-                    <div class="flex flex-col items-center">
-                      <span class="text-xl {getStatusColor(post.es.status)}">
-                        {getStatusIcon(post.es.status)}
-                      </span>
-                      {#if post.es.qualityScore > 0}
-                        <span class="text-xs mt-1 {getQualityBadgeClass(post.es.qualityScore)}">
-                          {post.es.qualityScore}%
-                        </span>
-                      {/if}
-                      {#if post.es.translatedAt}
-                        <span class="text-xs text-gray-500 mt-1">
-                          {formatDate(post.es.translatedAt)}
-                        </span>
-                      {/if}
-                    </div>
-                  </td>
-                  
-                  <td class="py-3 px-4 text-center">
-                    <div class="flex flex-col items-center">
-                      <span class="text-xl {getStatusColor(post.fr.status)}">
-                        {getStatusIcon(post.fr.status)}
-                      </span>
-                      {#if post.fr.qualityScore > 0}
-                        <span class="text-xs mt-1 {getQualityBadgeClass(post.fr.qualityScore)}">
-                          {post.fr.qualityScore}%
-                        </span>
-                      {/if}
-                      {#if post.fr.translatedAt}
-                        <span class="text-xs text-gray-500 mt-1">
-                          {formatDate(post.fr.translatedAt)}
-                        </span>
-                      {/if}
-                    </div>
-                  </td>
-                  
-                  <td class="py-3 px-4 text-center">
-                    {#if post.isComplete}
-                      <span class="inline-flex items-center px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                        ✓ Complete
-                      </span>
-                    {:else if post.es.status === 'failed' || post.fr.status === 'failed'}
-                      <span class="inline-flex items-center px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs">
-                        ✗ Failed
-                      </span>
-                    {:else}
-                      <span class="inline-flex items-center px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">
-                        ○ Pending
-                      </span>
+    </div>
+  {/if}
+  
+  <!-- Filters -->
+  <div class="flex flex-col sm:flex-row gap-4">
+    <div class="flex-1">
+      <input 
+        type="text"
+        bind:value={searchQuery}
+        placeholder="Search posts..."
+        class="w-full bg-black-soft border border-gray-dark rounded-lg px-4 py-2 text-white placeholder-gray-medium focus:outline-none focus:border-pink-bright"
+      />
+    </div>
+    <select 
+      bind:value={filterStatus}
+      class="bg-black-soft border border-gray-dark rounded-lg px-4 py-2 text-white focus:outline-none focus:border-pink-bright"
+    >
+      <option value="all">All Statuses</option>
+      <option value="completed">Completed</option>
+      <option value="in_progress">In Progress</option>
+      <option value="pending">Pending</option>
+      <option value="failed">Failed</option>
+    </select>
+  </div>
+  
+  <!-- Posts Grid -->
+  {#if $loadingStore.translations}
+    <div class="flex items-center justify-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-bright"></div>
+    </div>
+  {:else}
+    <div class="grid grid-cols-1 gap-4">
+      {#each filteredPosts as post}
+        <div class="bg-black-soft rounded-xl border border-gray-dark/50 overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold text-white">{post.title}</h3>
+                <p class="text-sm text-gray-medium mt-1">{post.slug}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-medium">Translation Progress</p>
+                <div class="flex items-center gap-2 mt-1">
+                  <div class="w-24 h-2 bg-gray-dark rounded-full overflow-hidden">
+                    <div class="h-full bg-pink-bright rounded-full" style="width: {getTranslationProgress(post)}%"></div>
+                  </div>
+                  <span class="text-white font-medium">{getTranslationProgress(post)}%</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Language Status Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {#each post.translations as translation}
+                {@const lang = languages.find(l => l.code === translation.language)}
+                {@const status = statusConfig[translation.status]}
+                <button 
+                  class="p-3 rounded-lg border transition-all text-left"
+                  class:border-green-500/50={translation.status === 'completed'}
+                  class:bg-green-500/5={translation.status === 'completed'}
+                  class:border-blue-500/50={translation.status === 'in_progress'}
+                  class:bg-blue-500/5={translation.status === 'in_progress'}
+                  class:border-gray-500/30={translation.status === 'pending'}
+                  class:bg-gray-500/5={translation.status === 'pending'}
+                  class:border-red-500/50={translation.status === 'failed'}
+                  class:bg-red-500/5={translation.status === 'failed'}
+                  class:hover:border-pink-bright={translation.status === 'pending' || translation.status === 'failed'}
+                  on:click={() => {
+                    if (translation.status === 'pending' || translation.status === 'failed') {
+                      openTriggerModal(post, translation.language);
+                    }
+                  }}
+                >
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-lg">{lang?.flag}</span>
+                    <span class="text-sm font-medium text-white">{lang?.name}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="text-xs {status?.color}">{status?.label}</span>
+                    {#if translation.progress > 0 && translation.progress < 100}
+                      <span class="text-xs text-gray-medium">({translation.progress}%)</span>
                     {/if}
-                  </td>
-                  
-                  <td class="py-3 px-4 text-right">
-                    <div class="flex items-center justify-end gap-2">
-                      <button
-                        on:click={() => {
-                          previewPost = post;
-                          showPreviewModal = true;
-                        }}
-                        class="p-2 text-gray-400 hover:text-white transition-colors"
-                        title="Preview"
-                      >
-                        👁
-                      </button>
-                      <button
-                        on:click={() => translatePost(post.slug, selectedLanguage === 'both' ? ['es', 'fr'] : [selectedLanguage])}
-                        disabled={isTranslating}
-                        class="px-3 py-1 bg-pink-bright/20 text-pink-bright rounded text-xs hover:bg-pink-bright/30 transition-colors disabled:opacity-50"
-                      >
-                        Translate
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  </div>
+                  {#if translation.lastUpdated}
+                    <p class="text-xs text-gray-medium mt-1">
+                      {new Date(translation.lastUpdated).toLocaleDateString()}
+                    </p>
+                  {/if}
+                </button>
               {/each}
-            </tbody>
-          </table>
-        </div>
-        
-        {#if filteredPosts.length === 0}
-          <div class="text-center py-12">
-            <p class="text-gray-400">No posts match your filters</p>
+            </div>
           </div>
-        {/if}
-      </div>
-
-      <!-- Legend -->
-      <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div class="flex items-center gap-2">
-          <span class="text-green-400">✓</span>
-          <span class="text-gray-400">Completed</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-yellow-400">⟳</span>
-          <span class="text-gray-400">In Progress</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-gray-400">○</span>
-          <span class="text-gray-400">Pending</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-red-400">✗</span>
-          <span class="text-gray-400">Failed</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-orange-400">!</span>
-          <span class="text-gray-400">Outdated</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-gray-600">-</span>
-          <span class="text-gray-400">Not Started</span>
-        </div>
+      {/each}
+    </div>
+    
+    {#if filteredPosts.length === 0}
+      <div class="text-center py-12">
+        <svg class="w-16 h-16 text-gray-dark mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-gray-medium">No posts found matching your filters.</p>
       </div>
     {/if}
-  </main>
+  {/if}
 </div>
 
-<!-- Preview Modal -->
-{#if showPreviewModal && previewPost}
-  <div
-    class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-    transition:fade
-    on:click={() => showPreviewModal = false}
-  >
-    <div
-      class="bg-black-soft rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden border border-gray-dark"
-      on:click|stopPropagation
-    >
-      <div class="p-4 border-b border-gray-dark flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-white">Translation Preview</h3>
-        <button
-          on:click={() => showPreviewModal = false}
-          class="text-gray-400 hover:text-white"
-        >
-          ✕
-        </button>
-      </div>
-      <div class="p-4 overflow-y-auto max-h-[60vh]">
-        <h4 class="text-white font-medium mb-2">{previewPost.title}</h4>
-        <p class="text-gray-400 text-sm mb-4">Slug: {previewPost.slug}</p>
-        
-        <div class="space-y-4">
-          <div class="bg-black p-4 rounded border border-gray-dark">
-            <h5 class="text-pink-bright font-medium mb-2">Spanish (ES)</h5>
-            <p class="text-sm text-gray-400">Status: <span class="{getStatusColor(previewPost.es.status)}">{previewPost.es.status || 'Not started'}</span></p>
-            {#if previewPost.es.qualityScore > 0}
-              <p class="text-sm text-gray-400">Quality: {previewPost.es.qualityScore}%</p>
-            {/if}
-            {#if previewPost.es.translatedAt}
-              <p class="text-sm text-gray-400">Last translated: {formatDate(previewPost.es.translatedAt)}</p>
-            {/if}
-          </div>
-          
-          <div class="bg-black p-4 rounded border border-gray-dark">
-            <h5 class="text-pink-bright font-medium mb-2">French (FR)</h5>
-            <p class="text-sm text-gray-400">Status: <span class="{getStatusColor(previewPost.fr.status)}">{previewPost.fr.status || 'Not started'}</span></p>
-            {#if previewPost.fr.qualityScore > 0}
-              <p class="text-sm text-gray-400">Quality: {previewPost.fr.qualityScore}%</p>
-            {/if}
-            {#if previewPost.fr.translatedAt}
-              <p class="text-sm text-gray-400">Last translated: {formatDate(previewPost.fr.translatedAt)}</p>
-            {/if}
+<!-- Trigger Translation Modal -->
+{#if showTriggerModal}
+  <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-black-soft rounded-2xl border border-gray-dark/50 p-6 max-w-md w-full">
+      <h3 class="text-xl font-semibold text-white mb-4">Start Translation</h3>
+      
+      {@const post = $translationsStore.find(p => p.slug === selectedPost)}
+      {@const lang = languages.find(l => l.code === selectedLanguage)}
+      
+      <div class="space-y-4 mb-6">
+        <div class="bg-black rounded-lg p-4">
+          <p class="text-sm text-gray-medium">Post</p>
+          <p class="text-white font-medium">{post?.title}</p>
+        </div>
+        <div class="bg-black rounded-lg p-4">
+          <p class="text-sm text-gray-medium">Target Language</p>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">{lang?.flag}</span>
+            <span class="text-white font-medium">{lang?.name}</span>
           </div>
         </div>
       </div>
-      <div class="p-4 border-t border-gray-dark flex justify-end gap-2">
-        <button
-          on:click={() => showPreviewModal = false}
-          class="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+      
+      <div class="flex gap-3">
+        <button 
+          on:click={closeTriggerModal}
+          class="flex-1 px-4 py-2 bg-gray-dark rounded-lg text-white hover:bg-gray-medium transition-colors"
+          disabled={isTriggering}
         >
-          Close
+          Cancel
         </button>
-        <button
-          on:click={() => {
-            showPreviewModal = false;
-            translatePost(previewPost.slug, ['es', 'fr']);
-          }}
-          disabled={isTranslating}
-          class="px-4 py-2 bg-pink-bright text-black font-semibold rounded-lg hover:bg-pink-medium transition-colors disabled:opacity-50"
+        <button 
+          on:click={handleTriggerTranslation}
+          class="flex-1 px-4 py-2 bg-pink-bright rounded-lg text-white hover:bg-pink-dark transition-colors flex items-center justify-center gap-2"
+          disabled={isTriggering}
         >
-          Translate Now
+          {#if isTriggering}
+            <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            Starting...
+          {:else}
+            Start Translation
+          {/if}
         </button>
       </div>
     </div>

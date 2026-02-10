@@ -24,5 +24,15 @@
     "view_all": "View All Articles",
     "subscribe_newsletter": "Get hair tips delivered",
     "related_posts": "You might also like"
-  }
+  },
+  "read_time": "{minutes} min read",
+  "published_on": "Published on {date}",
+  "by_author": "By {author}",
+  "category": "Category",
+  "tags": "Tags",
+  "related_articles": "Related Articles",
+  "share_article": "Share this article",
+  "leave_comment": "Leave a comment",
+  "subscribe_prompt": "Get hair tips delivered to your inbox",
+  "newsletter_cta": "Subscribe for weekly hair care tips"
 }

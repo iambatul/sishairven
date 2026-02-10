@@ -24,5 +24,15 @@
     "view_all": "Voir Tous les Articles",
     "subscribe_newsletter": "Recevez des conseils capillaires",
     "related_posts": "Vous aimerez aussi"
-  }
+  },
+  "read_time": "{minutes} min de lecture",
+  "published_on": "Publié le {date}",
+  "by_author": "Par {author}",
+  "category": "Catégorie",
+  "tags": "Tags",
+  "related_articles": "Articles Connexes",
+  "share_article": "Partager cet article",
+  "leave_comment": "Laisser un commentaire",
+  "subscribe_prompt": "Recevez des conseils capillaires dans votre boîte mail",
+  "newsletter_cta": "Abonnez-vous pour des conseils hebdomadaires"
 }

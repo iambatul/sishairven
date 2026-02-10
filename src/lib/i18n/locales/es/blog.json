@@ -24,5 +24,15 @@
     "view_all": "Ver Todos los Artículos",
     "subscribe_newsletter": "Recibe consejos de cabello",
     "related_posts": "También te puede gustar"
-  }
+  },
+  "read_time": "{minutes} min de lectura",
+  "published_on": "Publicado el {date}",
+  "by_author": "Por {author}",
+  "category": "Categoría",
+  "tags": "Etiquetas",
+  "related_articles": "Artículos Relacionados",
+  "share_article": "Compartir este artículo",
+  "leave_comment": "Dejar un comentario",
+  "subscribe_prompt": "Recibe consejos de cabello en tu correo",
+  "newsletter_cta": "Suscríbete para consejos semanales de cuidado capilar"
 }
