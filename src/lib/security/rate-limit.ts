@@ -146,10 +146,7 @@ export function applyRateLimit(
 	
 	if (!result.allowed) {
 		const handler = options.handler || ((retryAfter) => {
-			throw error(429, {
-				message: 'Too many requests',
-				retryAfter,
-			});
+			throw error(429, `Too many requests. Retry after ${retryAfter} seconds.`);
 		});
 		handler(result.retryAfter || 60);
 	}

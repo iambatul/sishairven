@@ -1,78 +1,78 @@
-import { json, type RequestHandler } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import type { RequestHandler } from './$types';
+import { json } from '@sveltejs/kit';
+import { validateCountryCode } from '$lib/security/validation';
+import { applyRateLimit, createRateLimitHeaders } from '$lib/security/rate-limit';
+
+export interface SessionTrackingData {
+  sessionId: string;
+  country?: string;
+  timezone?: string;
+  referrer?: string;
+  landingPage?: string;
+}
 
 /**
  * POST /api/clika/track-session
- * 
- * Proxies session start/end events to Phoenix Clika service.
- * Tracks session lifecycle for traffic quality analysis.
+ * Track user sessions for analytics
  */
-
-const CLIKA_API_URL = env.CLIKA_API_URL || 'http://localhost:8080';
-const CLIKA_API_KEY = env.CLIKA_API_KEY || '';
-
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
-	try {
-		const body = await request.json();
-		
-		// Validate required fields
-		if (!body.event || !body.session_id) {
-			return json({
-				success: false,
-				error: 'Event type and session_id are required'
-			}, { status: 400 });
-		}
-
-		// Validate event type
-		if (!['start', 'end'].includes(body.event)) {
-			return json({
-				success: false,
-				error: 'Event must be "start" or "end"'
-			}, { status: 400 });
-		}
-
-		// Add client metadata
-		const enrichedData = {
-			...body,
-			client_ip: getClientAddress(),
-			user_agent: request.headers.get('user-agent'),
-			referrer: request.headers.get('referer'),
-			tracked_at: Date.now()
-		};
-
-		// Forward to Clika service
-		const clikaResponse = await fetch(
-			`${CLIKA_API_URL}/api/clika/adfraud/domains/sishairven/session`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-API-Key': CLIKA_API_KEY,
-					'X-Forwarded-For': getClientAddress()
-				},
-				body: JSON.stringify(enrichedData)
-			}
-		);
-
-		if (!clikaResponse.ok) {
-			console.warn('Clika session API error:', await clikaResponse.text());
-			return json({
-				success: true,
-				tracked: false
-			});
-		}
-
-		return json({
-			success: true,
-			tracked: true,
-			event: body.event
-		});
-
-	} catch (error) {
-		console.error('Session tracking error:', error);
-		return json({
-			success: true,
-			tracked: false
-		});
-	}
+export const POST: RequestHandler = async ({ request, locals, getClientAddress }) => {
+  try {
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, {
+      maxRequests: 30,  // Lower limit for sessions
+      windowMs: 60000,
+      burst: 5,
+    });
+    
+    const data: SessionTrackingData = await request.json();
+    
+    // Validate session ID
+    if (!data.sessionId || typeof data.sessionId !== 'string' || data.sessionId.length > 100) {
+      return json({ error: 'Invalid session ID' }, { status: 400 });
+    }
+    
+    // Validate country if provided
+    if (data.country) {
+      const countryResult = validateCountryCode(data.country);
+      if (!countryResult.success) {
+        return json({ error: 'Invalid country code' }, { status: 400 });
+      }
+    }
+    
+    const sessionRecord = {
+      sessionId: data.sessionId,
+      country: data.country || locals.geo?.country || 'US',
+      timezone: data.timezone || locals.geo?.timezone || 'UTC',
+      referrer: data.referrer?.substring(0, 500),
+      landingPage: data.landingPage?.substring(0, 500),
+      ipHash: hashIP(getClientAddress()),
+      userAgent: request.headers.get('User-Agent')?.substring(0, 500),
+      timestamp: Date.now(),
+    };
+    
+    // Log session (in production, save to database)
+    console.log('[Clika Session]', {
+      sessionId: sessionRecord.sessionId,
+      country: sessionRecord.country,
+    });
+    
+    return json(
+      { success: true },
+      { headers: createRateLimitHeaders(rateLimitResult) }
+    );
+    
+  } catch (error) {
+    console.error('Session tracking error:', error);
+    return json({ error: 'Internal server error' }, { status: 500 });
+  }
 };
+
+function hashIP(ip: string): string {
+  let hash = 0;
+  for (let i = 0; i < ip.length; i++) {
+    const char = ip.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(16);
+}

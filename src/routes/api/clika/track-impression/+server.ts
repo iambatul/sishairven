@@ -1,69 +1,71 @@
-import { json, type RequestHandler } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import type { RequestHandler } from './$types';
+import { json } from '@sveltejs/kit';
+import { validateASIN } from '$lib/security/validation';
+import { applyRateLimit, createRateLimitHeaders } from '$lib/security/rate-limit';
+
+export interface ImpressionTrackingData {
+  asin: string;
+  productName: string;
+  category?: string;
+  country?: string;
+  visibleDuration?: number;
+}
 
 /**
  * POST /api/clika/track-impression
- * 
- * Proxies ad impression tracking to Phoenix Clika service.
- * Tracks when ads are 50%+ visible for 1+ seconds.
+ * Track product impressions with validation
  */
-
-const CLIKA_API_URL = env.CLIKA_API_URL || 'http://localhost:8080';
-const CLIKA_API_KEY = env.CLIKA_API_KEY || '';
-
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
-	try {
-		const body = await request.json();
-		
-		// Validate required fields
-		if (!body.position) {
-			return json({
-				success: false,
-				error: 'Position is required'
-			}, { status: 400 });
-		}
-
-		// Add client metadata
-		const enrichedData = {
-			...body,
-			ad_network: 'google_adsense', // Default, can be overridden
-			client_ip: getClientAddress(),
-			user_agent: request.headers.get('user-agent'),
-			tracked_at: Date.now()
-		};
-
-		// Forward to Clika service
-		const clikaResponse = await fetch(
-			`${CLIKA_API_URL}/api/clika/adfraud/domains/sishairven/impression`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-API-Key': CLIKA_API_KEY,
-					'X-Forwarded-For': getClientAddress()
-				},
-				body: JSON.stringify(enrichedData)
-			}
-		);
-
-		if (!clikaResponse.ok) {
-			console.warn('Clika impression API error:', await clikaResponse.text());
-			return json({
-				success: true,
-				tracked: false
-			});
-		}
-
-		return json({
-			success: true,
-			tracked: true
-		});
-
-	} catch (error) {
-		console.error('Impression tracking error:', error);
-		return json({
-			success: true,
-			tracked: false
-		});
-	}
+export const POST: RequestHandler = async ({ request, locals, getClientAddress }) => {
+  try {
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, {
+      maxRequests: 200,  // Higher limit for impressions
+      windowMs: 60000,
+      burst: 50,
+    });
+    
+    const data: ImpressionTrackingData = await request.json();
+    
+    // Validate ASIN
+    const asinResult = validateASIN(data.asin);
+    if (!asinResult.success) {
+      return json({ error: 'Invalid ASIN' }, { status: 400 });
+    }
+    
+    const impressionRecord = {
+      asin: asinResult.data,
+      productName: data.productName?.substring(0, 200),
+      category: data.category,
+      country: data.country || locals.geo?.country || 'US',
+      visibleDuration: Math.min(data.visibleDuration || 0, 300000), // Max 5 minutes
+      ipHash: hashIP(getClientAddress()),
+      timestamp: Date.now(),
+    };
+    
+    // Log impression (in production, save to database)
+    console.log('[Clika Impression]', {
+      asin: impressionRecord.asin,
+      country: impressionRecord.country,
+      duration: impressionRecord.visibleDuration,
+    });
+    
+    return json(
+      { success: true },
+      { headers: createRateLimitHeaders(rateLimitResult) }
+    );
+    
+  } catch (error) {
+    console.error('Impression tracking error:', error);
+    return json({ error: 'Internal server error' }, { status: 500 });
+  }
 };
+
+function hashIP(ip: string): string {
+  let hash = 0;
+  for (let i = 0; i < ip.length; i++) {
+    const char = ip.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(16);
+}

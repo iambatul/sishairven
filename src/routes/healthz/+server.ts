@@ -181,17 +181,16 @@ export const HEAD: RequestHandler = async () => {
 };
 
 /**
- * Track error for health metrics
- * This can be called from error handlers
+ * Track error for health metrics (internal use only)
  */
-export function trackError(): void {
+function _trackError(): void {
 	errorCount++;
 }
 
 /**
- * Get current metrics
+ * Get current metrics (internal use only)
  */
-export function getMetrics(): {
+function _getMetrics(): {
 	requests: number;
 	errors: number;
 	errorRate: number;

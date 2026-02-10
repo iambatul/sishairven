@@ -1,86 +1,66 @@
 import type { RequestHandler } from './$types';
 import { json, error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import type { ProxySelectionCriteria, ClikaProxy } from '$lib/clika/geo-evasion';
+import { applyRateLimit, createRateLimitHeaders } from '$lib/security/rate-limit';
+import { validateURL } from '$lib/security/validation';
 
+/**
+ * POST /api/clika/request-proxy
+ * Proxy requests to Phoenix Clika backend
+ * Requires CLIKA_API_KEY to be configured
+ */
 export const POST: RequestHandler = async ({ request }) => {
-  try {
-    const criteria: ProxySelectionCriteria = await request.json();
-    
-    if (!criteria.country) {
-      throw error(400, 'Country is required');
-    }
-    
-    const proxy = await fetchProxyFromClika(criteria);
-    
-    if (!proxy) {
-      throw error(503, 'No proxy available matching criteria');
-    }
-    
-    return json(proxy);
-    
-  } catch (e) {
-    console.error('Proxy request error:', e);
-    throw error(500, 'Failed to request proxy');
-  }
-};
-
-async function fetchProxyFromClika(criteria: ProxySelectionCriteria): Promise<ClikaProxy | null> {
-  const CLIKA_API_URL = env.CLIKA_API_URL;
-  const CLIKA_API_KEY = env.CLIKA_API_KEY;
-  
-  if (!CLIKA_API_URL || !CLIKA_API_KEY) {
-    console.log('[Clika] Using mock proxy (no API config)');
-    return createMockProxy(criteria);
+  // Check if Clika is configured
+  if (!env.CLIKA_API_KEY || !env.CLIKA_API_URL) {
+    throw error(503, 'Clika service not configured');
   }
   
   try {
-    const response = await fetch(`${CLIKA_API_URL}/api/v1/proxies/request`, {
+    // Strict rate limiting for proxy requests
+    const rateLimitResult = applyRateLimit(request, {
+      maxRequests: 10,
+      windowMs: 60000,
+      burst: 2,
+    });
+    
+    const data = await request.json();
+    
+    // Validate target URL if provided
+    if (data.targetUrl) {
+      const urlResult = validateURL(data.targetUrl, ['http:', 'https:']);
+      if (!urlResult.success) {
+        return json({ error: 'Invalid target URL' }, { status: 400 });
+      }
+    }
+    
+    // Forward request to Clika backend
+    const response = await fetch(`${env.CLIKA_API_URL}/api/proxy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CLIKA_API_KEY}`,
+        'X-API-Key': env.CLIKA_API_KEY,
+        'X-Forwarded-For': request.headers.get('X-Forwarded-For') || '',
       },
-      body: JSON.stringify(criteria),
+      body: JSON.stringify(data),
     });
     
     if (!response.ok) {
-      throw new Error(`Clika API error: ${response.status}`);
+      console.error('Clika proxy error:', response.status);
+      throw error(502, 'Clika service error');
     }
     
-    return await response.json();
+    const result = await response.json();
     
-  } catch (e) {
-    console.error('Clika API error:', e);
-    return null;
+    return json(result, {
+      headers: createRateLimitHeaders(rateLimitResult)
+    });
+    
+  } catch (err) {
+    if (err && typeof err === 'object' && 'status' in err) {
+      throw err;
+    }
+    
+    console.error('Proxy request error:', err);
+    throw error(500, 'Internal server error');
   }
-}
-
-function createMockProxy(criteria: ProxySelectionCriteria): ClikaProxy {
-  const cities: Record<string, string[]> = {
-    'US': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
-    'GB': ['London', 'Manchester', 'Birmingham', 'Leeds'],
-    'CA': ['Toronto', 'Vancouver', 'Montreal', 'Calgary'],
-    'DE': ['Berlin', 'Munich', 'Hamburg', 'Frankfurt'],
-    'FR': ['Paris', 'Marseille', 'Lyon', 'Toulouse'],
-    'ES': ['Madrid', 'Barcelona', 'Valencia', 'Seville'],
-    'AU': ['Sydney', 'Melbourne', 'Brisbane', 'Perth'],
-    'JP': ['Tokyo', 'Osaka', 'Yokohama', 'Nagoya'],
-  };
-  
-  const isps = ['Comcast', 'AT&T', 'Verizon', 'Spectrum', 'Cox', 'BT', 'Deutsche Telekom', 'Orange'];
-  
-  const countryCities = cities[criteria.country] || ['Unknown'];
-  const city = criteria.city || countryCities[Math.floor(Math.random() * countryCities.length)];
-  
-  return {
-    id: `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    ip: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-    country: criteria.country,
-    region: criteria.region || 'NA',
-    city,
-    isp: isps[Math.floor(Math.random() * isps.length)],
-    latency: Math.floor(Math.random() * 100) + 20,
-    health: 0.7 + Math.random() * 0.3,
-  };
-}
+};

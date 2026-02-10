@@ -12,50 +12,8 @@ export default defineConfig({
 		sourcemap: true,
 		// Optimize chunk size
 		chunkSizeWarningLimit: 1000,
-		// Rollup options for better optimization
-		rollupOptions: {
-			output: {
-				// Manual chunk splitting for better caching
-				manualChunks: {
-					// Vendor chunks
-					'vendor': [
-						'svelte',
-						'svelte-i18n',
-					],
-					// Analytics chunk (lazy loaded)
-					'analytics': [
-						// Google Analytics will be loaded dynamically
-					],
-				},
-				// Asset naming for better caching
-				entryFileNames: 'js/[name]-[hash].js',
-				chunkFileNames: 'js/[name]-[hash].js',
-				assetFileNames: (assetInfo) => {
-					const info = assetInfo.name || '';
-					if (info.endsWith('.css')) {
-						return 'css/[name]-[hash][extname]';
-					}
-					if (/\.(png|jpe?g|gif|svg|webp|ico)$/.test(info)) {
-						return 'images/[name]-[hash][extname]';
-					}
-					if (/\.(woff2?|ttf|otf|eot)$/.test(info)) {
-						return 'fonts/[name]-[hash][extname]';
-					}
-					return 'assets/[name]-[hash][extname]';
-				},
-			},
-		},
-		// Minification options
-		minify: 'terser',
-		terserOptions: {
-			compress: {
-				drop_console: true,
-				drop_debugger: true,
-			},
-			format: {
-				comments: false,
-			},
-		},
+		// Minification options (using esbuild instead of terser)
+		minify: 'esbuild',
 	},
 	// CSS optimization
 	css: {

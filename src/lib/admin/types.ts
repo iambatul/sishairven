@@ -212,3 +212,24 @@ export interface DateRange {
 }
 
 export type TimeRange = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
+
+// =============================================================================
+// STORAGE TYPES
+// =============================================================================
+
+export interface StoredClick {
+  id: string;
+  asin: string;
+  productName: string;
+  category: string;
+  country: string;
+  timestamp: number;
+  estimatedCommission: number;
+  proxyId?: string;
+  isBusinessHours?: boolean;
+}
+
+export interface StoredVisitor {
+  country: string;
+  timestamp: number;
+}

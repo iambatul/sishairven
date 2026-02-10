@@ -10,9 +10,18 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write \"src/**/*.{js,ts,svelte,css}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,svelte,css}\"",
-    "translate": "tsx scripts/translate-posts.ts",
-    "translate:es": "tsx scripts/translate-posts.ts --languages=es",
-    "translate:fr": "tsx scripts/translate-posts.ts --languages=fr"
+    "lint": "npm run format:check",
+    "test": "echo \"No tests configured\" && exit 0",
+    "deploy": "./scripts/deploy.sh",
+    "health-check": "./scripts/health-check.sh",
+    "db:migrate": "./database/migrate.sh up",
+    "db:status": "./database/migrate.sh status",
+    "db:backup": "./database/migrate.sh backup",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "security:audit": "npm audit"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.0",
@@ -31,8 +40,11 @@
   },
   "dependencies": {
     "@maxmind/geoip2-node": "^6.3.4",
-    "chart.js": "^4.5.1",
     "svelte-i18n": "^4.0.1"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
 }

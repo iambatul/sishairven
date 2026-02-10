@@ -16,7 +16,9 @@ import type {
   TranslationStatus,
   TranslationJob,
   DashboardStats,
-  TimeRange
+  TimeRange,
+  StoredClick,
+  StoredVisitor
 } from './types';
 
 // =============================================================================
@@ -371,21 +373,9 @@ export function generateDashboardStats(): DashboardStats {
 // IN-MEMORY STORAGE
 // =============================================================================
 
-interface StoredClick {
-  id: string;
-  asin: string;
-  productName: string;
-  category: string;
-  country: string;
-  timestamp: number;
-  estimatedCommission: number;
-  proxyId?: string;
-  isBusinessHours?: boolean;
-}
-
 class AdminDataStore {
   private clicks: StoredClick[] = [];
-  private visitors: { country: string; timestamp: number }[] = [];
+  private visitors: StoredVisitor[] = [];
   
   addClick(click: StoredClick): void {
     this.clicks.push(click);
@@ -406,7 +396,7 @@ class AdminDataStore {
     return this.clicks.filter(c => c.timestamp > cutoff);
   }
   
-  getVisitors(timeRange: TimeRange): typeof this.visitors {
+  getVisitors(timeRange: TimeRange): StoredVisitor[] {
     const hours = timeRange === '24h' ? 24 : timeRange === '7d' ? 168 : timeRange === '30d' ? 720 : 8760;
     const cutoff = Date.now() - hours * 60 * 60 * 1000;
     return this.visitors.filter(v => v.timestamp > cutoff);
