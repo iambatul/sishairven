@@ -6,9 +6,48 @@ export const amazonConfig = {
 	disclosure: 'As an Amazon Associate, we earn from qualifying purchases. This comes at no additional cost to you.'
 };
 
+// =============================================================================
+// AFFILIATE LINK TRACKING (Phoenix Clika Integration)
+// =============================================================================
+
+export interface AffiliateClickEvent {
+	asin: string;
+	product_name: string;
+	category: string;
+	context: 'shop_page' | 'review' | 'comparison' | 'guide' | 'product_card';
+	page_url: string;
+	click_timestamp: number;
+	potential_revenue?: number;
+}
+
+/**
+ * Track affiliate link click to Phoenix Clika backend
+ */
+export async function trackAffiliateClick(event: AffiliateClickEvent): Promise<void> {
+	if (typeof window === 'undefined') return;
+	
+	try {
+		await fetch('/api/clika/track-click', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(event)
+		});
+	} catch (e) {
+		// Silent fail - don't block user experience
+		console.debug('Click tracking failed:', e);
+	}
+}
+
+/**
+ * Create Amazon affiliate link with Phoenix tracking
+ */
 export function createAmazonLink(asin: string, options: {
 	tag?: string;
 	keywords?: string;
+	track?: boolean;
+	productName?: string;
+	category?: string;
+	context?: AffiliateClickEvent['context'];
 } = {}) {
 	const tag = options.tag || amazonConfig.tag;
 	
@@ -23,7 +62,41 @@ export function createAmazonLink(asin: string, options: {
 		url += `&keywords=${encodeURIComponent(options.keywords)}`;
 	}
 	
+	// Track click if requested
+	if (options.track && typeof window !== 'undefined') {
+		const product = curatedProducts.find(p => p.asin === asin);
+		const price = product ? parseFloat(product.price.replace(/[$,]/g, '')) : 0;
+		const commission = price * 0.06; // Estimate 6% commission
+		
+		trackAffiliateClick({
+			asin,
+			product_name: options.productName || product?.title || 'Unknown Product',
+			category: options.category || product?.category || 'unknown',
+			context: options.context || 'shop_page',
+			page_url: window.location.href,
+			click_timestamp: Date.now(),
+			potential_revenue: commission
+		});
+	}
+	
 	return url;
+}
+
+/**
+ * Create tracked affiliate link for use in components
+ */
+export function createTrackedAmazonLink(
+	asin: string,
+	productName: string,
+	category: string,
+	context: AffiliateClickEvent['context']
+): string {
+	return createAmazonLink(asin, {
+		track: true,
+		productName,
+		category,
+		context
+	});
 }
 
 export function createAmazonSearchLink(keywords: string, options: {

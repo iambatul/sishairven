@@ -7,6 +7,29 @@ declare global {
 		// interface PageData {}
 		// interface Platform {}
 	}
+
+	// Phoenix Clika AdFraud Integration
+	interface Window {
+		__PHOENIX_ADS__?: {
+			registerSlot: (config: {
+				position: string;
+				size: string;
+				container: HTMLElement;
+				onLoad?: () => void;
+			}) => void;
+		};
+		__PHOENIX_TRACKER__?: {
+			session?: {
+				sessionId: string;
+				pagesViewed: number;
+				clicks: number;
+			};
+		};
+		__PHOENIX_DEBUG__?: {
+			session: unknown;
+			config: unknown;
+		};
+	}
 }
 
 export {};
