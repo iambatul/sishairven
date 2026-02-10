@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import SEO from '$lib/components/SEO.svelte';
 	import { siteConfig } from '$lib/utils/seo';
 	import { amazonConfig } from '$lib/utils/amazon';

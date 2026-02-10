@@ -42,6 +42,18 @@ export const posts: BlogPost[] = [
 		published: true
 	},
 	{
+		slug: 'dyson-vs-ghd-vs-revlon',
+		title: 'Dyson vs ghd vs Revlon: Hair Dryer Comparison (2025)',
+		description: 'We tested three popular hair dryers side-by-side in our salon. See which one is worth your money based on your hair type.',
+		date: '2025-02-05',
+		author: 'Elyn Makna',
+		category: 'Reviews',
+		tags: ['hair-dryers', 'comparison', 'styling-tools', 'dyson', 'ghd', 'revlon'],
+		image: '/blog/hair-dryer-comparison.jpg',
+		readingTime: 8,
+		published: true
+	},
+	{
 		slug: 'balayage-vs-highlights',
 		title: 'Balayage vs Highlights: Which is Right for You?',
 		description: 'Our color specialists explain the differences between balayage and traditional highlights to help you choose.',

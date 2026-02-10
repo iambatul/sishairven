@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import SEO from '$lib/components/SEO.svelte';
 	import { generateLocalBusinessSchema } from '$lib/utils/seo';
 	

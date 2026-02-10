@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/public';
 
 export const amazonConfig = {
-	tag: env.PUBLIC_AMAZON_ASSOC_TAG || '',
+	tag: env.PUBLIC_AMAZON_ASSOC_TAG || 'CHANGEME',
 	baseUrl: 'https://www.amazon.com',
 	disclosure: 'As an Amazon Associate, we earn from qualifying purchases. This comes at no additional cost to you.'
 };
@@ -12,8 +12,8 @@ export function createAmazonLink(asin: string, options: {
 } = {}) {
 	const tag = options.tag || amazonConfig.tag;
 	
-	if (!tag) {
-		console.warn('Amazon affiliate tag not configured');
+	// If tag is CHANGEME or empty, just return base product URL
+	if (!tag || tag === 'CHANGEME') {
 		return `${amazonConfig.baseUrl}/dp/${asin}`;
 	}
 	
