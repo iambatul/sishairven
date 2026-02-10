@@ -44,7 +44,24 @@
     return $page.url.pathname === path || (path !== '/admin' && $page.url.pathname.startsWith(path));
   }
   
+  function getNavItemClass(path: string): string {
+    const active = isActive(path);
+    return active 
+      ? 'flex items-center gap-3 px-4 py-3 rounded-lg transition-all bg-pink-bright/20 text-pink-bright'
+      : 'flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-light hover:bg-gray-dark/50';
+  }
+  
   $: pageTitle = navItems.find(item => isActive(item.path))?.label || 'Dashboard';
+  
+  function handleLoginSubmit(e: SubmitEvent) {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const username = formData.get('username') as string;
+    const password = formData.get('password') as string;
+    const success = authStore.login(username, password);
+    if (!success) alert('Invalid credentials. Try password: hairven2026');
+  }
 </script>
 
 <svelte:head>
@@ -63,14 +80,7 @@
       </div>
       <form 
         class="space-y-6"
-        on:submit|preventDefault={(e) => {
-          const form = e.target as HTMLFormElement;
-          const formData = new FormData(form);
-          const username = formData.get('username') as string;
-          const password = formData.get('password') as string;
-          const success = authStore.login(username, password);
-          if (!success) alert('Invalid credentials. Try password: hairven2026');
-        }}
+        on:submit={handleLoginSubmit}
       >
         <div>
           <label for="username" class="block text-sm font-medium text-gray-light mb-2">Username</label>
@@ -95,7 +105,7 @@
       </div>
       <nav class="flex-1 p-4 space-y-1">
         {#each navItems as item}
-          <a href={item.path} class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all" class:bg-pink-bright/20={isActive(item.path)} class:text-pink-bright={isActive(item.path)} class:text-gray-light={!isActive(item.path)} class:hover:bg-gray-dark/50={!isActive(item.path)}>
+          <a href={item.path} class={getNavItemClass(item.path)}>
             <span>{@html item.icon}</span>
             <span class="font-medium">{item.label}</span>
           </a>
@@ -123,7 +133,7 @@
       {#if mobileMenuOpen}
         <nav class="border-t border-gray-dark/50 p-4 space-y-1">
           {#each navItems as item}
-            <a href={item.path} class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all" class:bg-pink-bright/20={isActive(item.path)} class:text-pink-bright={isActive(item.path)} class:text-gray-light={!isActive(item.path)}>
+            <a href={item.path} class={getNavItemClass(item.path)}>
               <span>{@html item.icon}</span>
               <span class="font-medium">{item.label}</span>
             </a>

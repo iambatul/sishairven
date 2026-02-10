@@ -38,6 +38,13 @@
     return `${mins}m ${secs}s`;
   }
   
+  function getChangeBadgeClass(change: number): string {
+    const isPositive = change >= 0;
+    return `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+      isPositive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+    }`;
+  }
+  
   function initCharts() {
     if (!countryCanvas || !languageCanvas || !trafficCanvas) return;
     
@@ -163,6 +170,11 @@
     });
   }
   
+  function handleTimeRangeSelect(e: Event) {
+    const target = e.target as HTMLSelectElement;
+    handleTimeRangeChange(target.value as TimeRange);
+  }
+  
   function exportData() {
     const csv = [
       ['Country', 'Visitors', 'Percentage', 'Change'].join(','),
@@ -203,7 +215,7 @@
     <div class="flex items-center gap-3">
       <select 
         value={$timeRangeStore}
-        on:change={(e) => handleTimeRangeChange(e.currentTarget.value as TimeRange)}
+        on:change={handleTimeRangeSelect}
         class="bg-black-soft border border-gray-dark rounded-lg px-4 py-2 text-white focus:outline-none focus:border-pink-bright"
       >
         {#each timeRanges as range}
@@ -301,13 +313,7 @@
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <span 
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                    class:bg-green-500/20={country.change >= 0}
-                    class:text-green-400={country.change >= 0}
-                    class:bg-red-500/20={country.change < 0}
-                    class:text-red-400={country.change < 0}
-                  >
+                  <span class={getChangeBadgeClass(country.change)}>
                     {country.change >= 0 ? '+' : ''}{country.change}%
                   </span>
                 </td>

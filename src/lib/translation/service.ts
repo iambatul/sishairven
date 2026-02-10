@@ -588,3 +588,28 @@ export function estimateTranslationCost(charCount: number): number {
   const DEEPL_PRO_RATE = 0.00002;
   return charCount * DEEPL_PRO_RATE;
 }
+
+// =============================================================================
+// LOGGING
+// =============================================================================
+
+/**
+ * Log translation events for debugging and monitoring
+ */
+export function logTranslationEvent(level: 'info' | 'warn' | 'error', message: string, data?: unknown): void {
+  const timestamp = new Date().toISOString();
+  const logEntry = { timestamp, level, message, data };
+  
+  if (level === 'error') {
+    console.error(`[Translation] ${message}`, data || '');
+  } else if (level === 'warn') {
+    console.warn(`[Translation] ${message}`, data || '');
+  } else {
+    console.log(`[Translation] ${message}`, data || '');
+  }
+  
+  // In production, send to logging service
+  if (typeof window !== 'undefined' && level === 'error') {
+    // Could send to error tracking service
+  }
+}

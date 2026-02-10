@@ -111,6 +111,11 @@
     });
   }
   
+  function handleTimeRangeSelect(e: Event) {
+    const target = e.target as HTMLSelectElement;
+    handleTimeRangeChange(target.value as TimeRange);
+  }
+  
   onMount(() => {
     loadingStore.update(l => ({ ...l, clika: true }));
     fetchClikaAnalytics($timeRangeStore).then(() => {
@@ -133,7 +138,7 @@
     </div>
     <select 
       value={$timeRangeStore}
-      on:change={(e) => handleTimeRangeChange(e.currentTarget.value as TimeRange)}
+      on:change={handleTimeRangeSelect}
       class="bg-black-soft border border-gray-dark rounded-lg px-4 py-2 text-white focus:outline-none focus:border-pink-bright"
     >
       {#each timeRanges as range}

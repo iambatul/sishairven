@@ -55,6 +55,19 @@
     showTriggerModal = true;
   }
   
+  function getTranslationButtonClass(status: string): string {
+    const baseClass = 'p-3 rounded-lg border transition-all text-left';
+    if (status === 'completed') {
+      return `${baseClass} border-green-500/50 bg-green-500/5`;
+    } else if (status === 'pending') {
+      return `${baseClass} border-gray-500/30 bg-gray-500/5`;
+    } else if (status === 'failed') {
+      return `${baseClass} border-red-500/50 bg-red-500/5`;
+    } else {
+      return `${baseClass} border-yellow-500/50 bg-yellow-500/5`;
+    }
+  }
+  
   function closeTriggerModal() {
     showTriggerModal = false;
     selectedPost = null;
@@ -136,7 +149,7 @@
               </div>
             </div>
             <div class="flex items-center gap-4">
-              {#if job.status === 'processing' || job.status === 'in_progress'}
+              {#if job.status === 'processing'}
                 <div class="w-32">
                   <div class="flex justify-between text-xs mb-1">
                     <span class="text-gray-medium">Progress</span>
@@ -206,11 +219,7 @@
               {@const lang = languages.find(l => l.code === translation.language)}
               {@const status = statusConfig[translation.status]}
               <button 
-                class="p-3 rounded-lg border transition-all text-left"
-                class:border-green-500/50={translation.status === 'completed'}
-                class:bg-green-500/5={translation.status === 'completed'}
-                class:border-gray-500/30={translation.status === 'pending'}
-                class:bg-gray-500/5={translation.status === 'pending'}
+                class={getTranslationButtonClass(translation.status)}
                 on:click={() => { if (translation.status === 'pending' || translation.status === 'failed') openTriggerModal(post, translation.language); }}
               >
                 <div class="flex items-center gap-2 mb-1">
@@ -228,11 +237,11 @@
 </div>
 
 {#if showTriggerModal}
+  {@const post = $translationsStore.find(p => p.slug === selectedPost)}
+  {@const lang = languages.find(l => l.code === selectedLanguage)}
   <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-black-soft rounded-2xl border border-gray-dark/50 p-6 max-w-md w-full">
       <h3 class="text-xl font-semibold text-white mb-4">Start Translation</h3>
-      {@const post = $translationsStore.find(p => p.slug === selectedPost)}
-      {@const lang = languages.find(l => l.code === selectedLanguage)}
       <div class="space-y-4 mb-6">
         <div class="bg-black rounded-lg p-4">
           <p class="text-sm text-gray-medium">Post</p>
