@@ -35,7 +35,7 @@
   // Get alternate URLs for the current page
   function getLanguageUrl(langCode: string): string {
     const currentPath = $page.url.pathname;
-    const cleanPath = currentPath.replace(/^\/(es|fr|de|pt|it)/, '') || '/';
+    const cleanPath = currentPath.replace(/^\/(es|fr|de)/, '') || '/';
     
     return langCode === 'en' ? cleanPath : `/${langCode}${cleanPath}`;
   }

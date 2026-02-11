@@ -17,6 +17,7 @@
     "db:migrate": "./database/migrate.sh up",
     "db:status": "./database/migrate.sh status",
     "db:backup": "./database/migrate.sh backup",
+    "setup:admin": "node scripts/setup-admin.js",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
@@ -40,6 +41,10 @@
   },
   "dependencies": {
     "@maxmind/geoip2-node": "^6.3.4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/chart.js": "^2.9.41",
+    "better-sqlite3": "^12.6.2",
+    "chart.js": "^4.5.1",
     "svelte-i18n": "^4.0.1"
   },
   "type": "module",

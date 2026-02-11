@@ -1,0 +1,108 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "services": "Dienstleistungen",
+    "shop": "Shop",
+    "blog": "Blog",
+    "about": "Über Uns",
+    "contact": "Kontakt",
+    "book": "Termin Buchen"
+  },
+  "actions": {
+    "book": "Termin Vereinbaren",
+    "buy": "Jetzt Kaufen",
+    "read_more": "Weiterlesen",
+    "learn_more": "Mehr Erfahren",
+    "subscribe": "Abonnieren",
+    "share": "Teilen",
+    "view_all": "Alle Anzeigen",
+    "shop_now": "Jetzt Einkaufen",
+    "view_details": "Details Ansehen",
+    "add_to_cart": "In den Warenkorb",
+    "checkout": "Zur Kasse",
+    "continue_shopping": "Weiter Einkaufen",
+    "apply": "Anwenden",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "sort": "Sortieren",
+    "loading": "Laden...",
+    "see_more": "Mehr Sehen"
+  },
+  "seo": {
+    "default_title": "Hairven by Elyn | Premium Friseursalon in Cortland, NY",
+    "default_description": "Professionelles Haarstyling, Coloration und Behandlungen in Cortland, New York. Buchen Sie Ihren Termin bei Hairven by Elyn noch heute.",
+    "site_name": "Hairven by Elyn"
+  },
+  "footer": {
+    "copyright": "© {year} Hairven by Elyn",
+    "rights": "Alle Rechte vorbehalten.",
+    "address": "64 Owego St, Cortland, NY 13045",
+    "phone": "(607) 555-0123",
+    "email": "hello@sishairven.com",
+    "hours": "Di-Sa: 9:00 - 19:00 Uhr",
+    "tagline": "Wo Schönheit auf Selbstvertrauen trifft"
+  },
+  "language": {
+    "select": "Sprache Auswählen",
+    "current": "Sprache",
+    "switch": "Sprache Wechseln"
+  },
+  "currency": {
+    "select": "Währung Auswählen",
+    "current": "Währung"
+  },
+  "blog": {
+    "read_time": "{minutes} Min. Lesezeit",
+    "published_on": "Veröffentlicht am {date}",
+    "by_author": "Von {author}",
+    "category": "Kategorie",
+    "tags": "Tags",
+    "related_articles": "Verwandte Artikel",
+    "share_article": "Diesen Artikel teilen",
+    "leave_comment": "Einen Kommentar hinterlassen",
+    "subscribe_prompt": "Haarpflege-Tipps direkt in Ihren Posteingang",
+    "newsletter_cta": "Abonnieren Sie wöchentliche Haarpflege-Tipps"
+  },
+  "shop": {
+    "categories": "Kategorien",
+    "filters": "Filter",
+    "price_range": "Preisspanne",
+    "rating": "Bewertung",
+    "availability": "Verfügbarkeit",
+    "in_stock": "Auf Lager",
+    "out_of_stock": "Nicht auf Lager",
+    "add_to_wishlist": "Zur Wunschliste",
+    "free_shipping": "Kostenloser Versand",
+    "affiliate_disclosure": "Als Amazon-Partner verdienen wir an qualifizierten Verkäufen.",
+    "price_updated": "Preis aktualisiert {date}",
+    "view_on_amazon": "Bei Amazon Ansehen",
+    "bestseller": "Bestseller",
+    "sale": "Angebot"
+  },
+  "services": {
+    "book_now": "Jetzt Buchen",
+    "duration": "Dauer",
+    "price_starting": "Ab {price}",
+    "view_all_services": "Alle Dienstleistungen"
+  },
+  "forms": {
+    "name": "Name",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "message": "Nachricht",
+    "submit": "Absenden",
+    "sending": "Wird gesendet...",
+    "success": "Vielen Dank! Wir melden uns bald bei Ihnen.",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "errors": {
+    "404_title": "Seite Nicht Gefunden",
+    "404_message": "Entschuldigung, wir konnten die gesuchte Seite nicht finden.",
+    "go_home": "Zur Startseite",
+    "generic": "Etwas ist schiefgelaufen"
+  }
+}

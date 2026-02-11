@@ -839,16 +839,19 @@
 					</select>
 				</div>
 				
-				<div>
-					<label for="date" class="block text-pink-bright font-semibold mb-2">Preferred Date *</label>
-					<input
-						type="date"
-						id="date"
-						bind:value={formData.date}
-						required
-						class="w-full px-4 py-3 bg-black-light border-2 border-pink-bright/30 rounded-lg text-gray-light focus:outline-none focus:border-pink-bright transition-colors"
-					/>
-				</div>
+					<div>
+						<label for="date" class="block text-pink-bright font-semibold mb-2">Preferred Date *</label>
+						<input
+							type="date"
+							id="date"
+							bind:value={formData.date}
+							min={new Date().toISOString().split('T')[0]}
+							max={new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+							required
+							class="w-full px-4 py-3 bg-black-light border-2 border-pink-bright/30 rounded-lg text-gray-light focus:outline-none focus:border-pink-bright transition-colors"
+						/>
+						<p class="text-xs text-gray-medium mt-1">Appointments can be booked up to 3 months in advance</p>
+					</div>
 				
 				<div>
 					<label for="message" class="block text-pink-bright font-semibold mb-2">Message</label>

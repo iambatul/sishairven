@@ -101,7 +101,7 @@
             y: {
               type: 'linear', display: true, position: 'left',
               grid: { color: 'rgba(255, 255, 255, 0.1)' },
-              ticks: { color: '#6b6b6b', callback: (value) => '$' + value }
+              ticks: { color: '#6b6b6b', callback: (value: number | string) => '$' + value }
             },
             y1: {
               type: 'linear', display: true, position: 'right',

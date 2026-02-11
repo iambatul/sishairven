@@ -102,10 +102,10 @@ export interface LanguageConfig {
  * Supported languages configuration
  */
 export const supportedLanguages: LanguageConfig[] = [
-  { code: 'en', name: 'English', nameEn: 'English', flag: '🇺🇸', dir: 'ltr', enabled: true },
+  { code: 'en', name: 'English', nameEn: 'English', flag: '🇬🇧', dir: 'ltr', enabled: true },
   { code: 'es', name: 'Español', nameEn: 'Spanish', flag: '🇪🇸', dir: 'ltr', enabled: true },
   { code: 'fr', name: 'Français', nameEn: 'French', flag: '🇫🇷', dir: 'ltr', enabled: true },
-  { code: 'de', name: 'Deutsch', nameEn: 'German', flag: '🇩🇪', dir: 'ltr', enabled: false },
+  { code: 'de', name: 'Deutsch', nameEn: 'German', flag: '🇩🇪', dir: 'ltr', enabled: true },
   { code: 'pt', name: 'Português', nameEn: 'Portuguese', flag: '🇧🇷', dir: 'ltr', enabled: false },
   { code: 'it', name: 'Italiano', nameEn: 'Italian', flag: '🇮🇹', dir: 'ltr', enabled: false },
 ];

@@ -1,83 +1,101 @@
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
-import { generateDashboardStats, generateGeoAnalytics, adminDataStore } from '$lib/admin/mockData';
+import { requireAdmin } from '$lib/auth';
+import { getAppointmentStats, getClickStats } from '$lib/db';
 import type { TimeRange } from '$lib/admin/types';
 
-export const GET: RequestHandler = async ({ url }) => {
-  try {
-    const type = url.searchParams.get('type') || 'dashboard';
-    const range = (url.searchParams.get('range') as TimeRange) || '7d';
-    
-    switch (type) {
-      case 'dashboard': {
-        const realStats = adminDataStore.getStats();
-        const mockStats = generateDashboardStats();
-        
-        return json({
-          success: true,
-          data: {
-            ...mockStats,
-            todayClicks: Math.max(mockStats.todayClicks, realStats.todayClicks),
-            todayVisitors: Math.max(mockStats.todayVisitors, realStats.todayVisitors),
-            todayRevenue: Math.max(mockStats.todayRevenue, realStats.todayRevenue)
-          },
-          timestamp: Date.now()
-        });
-      }
-      
-      case 'geo': {
-        const data = generateGeoAnalytics(range);
-        const realVisitors = adminDataStore.getVisitors(range);
-        
-        if (realVisitors.length > 0) {
-          const realCountries = realVisitors.reduce((acc, v) => {
-            acc[v.country] = (acc[v.country] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
-          
-          Object.entries(realCountries).forEach(([country, count]) => {
-            const existing = data.countries.find(c => c.country === country);
-            if (existing) {
-              existing.visitors += count;
-            } else {
-              data.countries.push({
-                country,
-                countryName: country,
-                visitors: count,
-                percentage: 0,
-                change: 0
-              });
-            }
-          });
-          
-          const total = data.countries.reduce((sum, c) => sum + c.visitors, 0);
-          data.countries.forEach(c => {
-            c.percentage = Math.round((c.visitors / total) * 100);
-          });
-          data.countries.sort((a, b) => b.visitors - a.visitors);
-          data.totalVisitors = total;
-        }
-        
-        return json({
-          success: true,
-          data,
-          timestamp: Date.now()
-        });
-      }
-      
-      default:
-        return json({
-          success: false,
-          error: 'Invalid stats type',
-          timestamp: Date.now()
-        }, { status: 400 });
-    }
-  } catch (error) {
-    console.error('Admin stats error:', error);
-    return json({
-      success: false,
-      error: 'Internal server error',
-      timestamp: Date.now()
-    }, { status: 500 });
-  }
+export const GET: RequestHandler = async (event) => {
+	try {
+		// Require admin authentication
+		requireAdmin(event);
+
+		const { url } = event;
+		const type = url.searchParams.get('type') || 'dashboard';
+		const range = (url.searchParams.get('range') as TimeRange) || '7d';
+		
+		switch (type) {
+			case 'dashboard': {
+				const appointmentStats = getAppointmentStats();
+				const clickStats = getClickStats(30);
+				
+				return json({
+					success: true,
+					data: {
+						todayVisitors: Math.floor(Math.random() * 100) + 50, // Placeholder until analytics
+						todayClicks: clickStats.total,
+						todayRevenue: clickStats.total * 0.06, // Estimated commission
+						appointments: appointmentStats,
+						visitorChange: 5.2,
+						clickChange: -2.1,
+						revenueChange: 8.5,
+					},
+					timestamp: Date.now()
+				});
+			}
+			
+			case 'geo': {
+				const clickStats = getClickStats(getDaysFromRange(range));
+				
+				return json({
+					success: true,
+					data: {
+						countries: Object.entries(clickStats.byCountry).map(([country, count]) => ({
+							country,
+							countryName: country,
+							visitors: count,
+							percentage: Math.round((count / clickStats.total) * 100) || 0,
+							change: 0,
+						})),
+						languages: [],
+						traffic: [],
+						totalVisitors: clickStats.total,
+						totalPageViews: clickStats.total * 2, // Estimate
+						avgSessionDuration: 180,
+						bounceRate: 0.45,
+					},
+					timestamp: Date.now()
+				});
+			}
+
+			case 'appointments': {
+				const stats = getAppointmentStats();
+				return json({
+					success: true,
+					data: stats,
+					timestamp: Date.now()
+				});
+			}
+			
+			default:
+				return json({
+					success: false,
+					error: 'Invalid stats type',
+					timestamp: Date.now()
+				}, { status: 400 });
+		}
+	} catch (err: unknown) {
+		// Handle auth errors
+		if (err && typeof err === 'object' && 'status' in err) {
+			throw err;
+		}
+
+		console.error('Admin stats error:', err);
+		return json({
+			success: false,
+			error: 'Internal server error',
+			timestamp: Date.now()
+		}, { status: 500 });
+	}
 };
+
+function getDaysFromRange(range: TimeRange): number {
+	switch (range) {
+		case '24h': return 1;
+		case '7d': return 7;
+		case '30d': return 30;
+		case '90d': return 90;
+		case '1y': return 365;
+		case 'all': return 3650; // 10 years
+		default: return 7;
+	}
+}

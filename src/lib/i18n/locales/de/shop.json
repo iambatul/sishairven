@@ -1,0 +1,40 @@
+{
+  "title": "Empfohlene Produkte",
+  "subtitle": "Professionelle Haarpflegeprodukte, kuratiert von unseren Stylisten",
+  "categories": {
+    "hair-tools": "Haarstyling-Tools",
+    "hair-care": "Haarpflege",
+    "styling": "Styling-Produkte",
+    "brushes": "Bürsten",
+    "accessories": "Zubehör"
+  },
+  "filters": {
+    "all_products": "Alle Produkte",
+    "price_low_high": "Preis: Niedrig bis Hoch",
+    "price_high_low": "Preis: Hoch bis Niedrig",
+    "rating": "Höchste Bewertung",
+    "bestselling": "Bestseller"
+  },
+  "product": {
+    "features": "Merkmale",
+    "specifications": "Spezifikationen",
+    "reviews": "Bewertungen",
+    "related": "Verwandte Produkte",
+    "in_stock": "Auf Lager",
+    "out_of_stock": "Nicht auf Lager",
+    "bestseller": "Bestseller",
+    "sale": "Angebot",
+    "view_on_amazon": "Bei Amazon Ansehen",
+    "price_may_vary": "Preis und Verfügbarkeit können variieren"
+  },
+  "cart": {
+    "title": "Ihr Warenkorb",
+    "empty": "Ihr Warenkorb ist leer",
+    "continue_shopping": "Weiter Einkaufen",
+    "subtotal": "Zwischensumme",
+    "shipping": "Versand",
+    "total": "Gesamtsumme",
+    "checkout": "Zur Kasse"
+  },
+  "disclosure": "Als Amazon-Partner verdienen wir an qualifizierten Verkäufen. Dies führt zu keinen zusätzlichen Kosten für Sie."
+}

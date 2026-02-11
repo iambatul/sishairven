@@ -1,0 +1,38 @@
+{
+  "title": "Haarpflege-Blog",
+  "subtitle": "Expertentipps, Produktbewertungen und Styling-Anleitungen von unseren professionellen Stylisten",
+  "categories": {
+    "reviews": "Bewertungen",
+    "guides": "Anleitungen",
+    "education": "Bildung"
+  },
+  "meta": {
+    "reading_time": "{time} Min. Lesezeit",
+    "by_author": "Von {author}",
+    "published": "Veröffentlicht {date}",
+    "updated": "Aktualisiert {date}"
+  },
+  "filters": {
+    "all_categories": "Alle Kategorien",
+    "sort_by": "Sortieren nach",
+    "latest": "Neueste",
+    "popular": "Beliebteste",
+    "oldest": "Älteste"
+  },
+  "cta": {
+    "read_article": "Artikel Lesen",
+    "view_all": "Alle Artikel",
+    "subscribe_newsletter": "Haarpflege-Tipps erhalten",
+    "related_posts": "Das könnte Ihnen auch gefallen"
+  },
+  "read_time": "{minutes} Min. Lesezeit",
+  "published_on": "Veröffentlicht am {date}",
+  "by_author": "Von {author}",
+  "category": "Kategorie",
+  "tags": "Tags",
+  "related_articles": "Verwandte Artikel",
+  "share_article": "Diesen Artikel teilen",
+  "leave_comment": "Einen Kommentar hinterlassen",
+  "subscribe_prompt": "Haarpflege-Tipps direkt in Ihren Posteingang",
+  "newsletter_cta": "Abonnieren Sie wöchentliche Haarpflege-Tipps"
+}

@@ -38,6 +38,11 @@ function registerTranslations() {
   register('fr', () => import('./locales/fr/common.json'));
   register('fr', () => import('./locales/fr/blog.json'));
   register('fr', () => import('./locales/fr/shop.json'));
+  
+  // German
+  register('de', () => import('./locales/de/common.json'));
+  register('de', () => import('./locales/de/blog.json'));
+  register('de', () => import('./locales/de/shop.json'));
 }
 
 // =============================================================================
@@ -247,7 +252,7 @@ export function getAlternateLanguages(currentPath: string): Array<{ code: string
   
   return enabledLangs.map(lang => {
     // Remove current language prefix if present
-    const cleanPath = currentPath.replace(/^\/(es|fr|de|pt|it)/, '');
+    const cleanPath = currentPath.replace(/^\/(es|fr|de)/, '');
     
     return {
       code: lang.code,

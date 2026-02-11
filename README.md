@@ -1,23 +1,42 @@
 # Hairven by Elyn - Salon Website
 
-A beautiful, immersive one-page website for Hairven by Elyn hair salon and beauty services. Features dynamic background cycling, dark theme design, collapsible pricing sections, and online booking functionality.
+A production-ready, feature-rich website for Hairven by Elyn hair salon and beauty services. Features dynamic backgrounds, dark theme design, online booking with admin dashboard, multi-language support, and affiliate marketing integration.
 
-## Features
+## 🚀 Features
 
+### Core Website
 - 🎨 **Immersive Dynamic Background** - Cycles through 5 beautiful background images
 - 🌙 **Dark Theme Design** - Elegant dark theme with pink and gold accents
 - 📱 **Fully Responsive** - Mobile-first design with optimized mobile navigation
 - ✨ **Collapsible Pricing** - Click service images to expand/collapse pricing tables
-- 📞 **Quick Call Button** - Red call button for instant contact
-- 📝 **Online Booking** - Appointment booking form with persistent storage
-- 🔒 **Secure & Stealthy** - Designed for professional use with security headers
+- 📞 **Quick Call Button** - Instant contact button
+
+### Booking & Business
+- 📝 **Online Booking** - Appointment booking form with validation
+- 🗄️ **Admin Dashboard** - Manage appointments, view analytics
+- 🔐 **Secure Authentication** - Token-based admin access
+- 📊 **Analytics** - Click tracking, appointment stats
+
+### International
+- 🌍 **Multi-Language** - English, Spanish, French, German
+- 💱 **Multi-Currency** - USD, EUR, GBP support
+- 🌐 **Geo-Localization** - Auto-detect user location and language
+- 🛒 **Regional Amazon** - Auto-redirect to local Amazon stores
+
+### Technical
+- ⚡ **High Performance** - SQLite with WAL mode, optimized queries
+- 🐳 **Docker Ready** - Production-grade containerization
+- 🔒 **Security** - Rate limiting, input validation, security headers
+- 📈 **SEO Ready** - Meta tags, sitemap, structured data
 
 ## Tech Stack
 
-- **Frontend**: SvelteKit, TailwindCSS
-- **Database**: JSON file-based storage (appointments.json)
-- **Container**: Docker (Alpine-based)
-- **Reverse Proxy**: Caddy with Cloudflare DNS-01 wildcard certificates
+- **Frontend**: SvelteKit 5, TailwindCSS, TypeScript
+- **Database**: SQLite (better-sqlite3) with WAL mode
+- **Authentication**: Token-based with session management
+- **Container**: Docker (Alpine-based with SQLite support)
+- **Reverse Proxy**: Caddy with Cloudflare integration
+- **i18n**: svelte-i18n with lazy loading
 
 ## Prerequisites
 
@@ -43,21 +62,32 @@ ls static/bg/
 # Should show: bg1.webp, bg2.webp, bg3.webp, bg4.webp, bg5.webp
 ```
 
-### 3. Run Setup Script
+### 3. Configure Environment
 
 ```bash
-chmod +x setup.sh
-./setup.sh
+# Copy production environment template
+cp .env.production .env
+
+# Generate admin credentials
+npm run setup:admin
+# Follow prompts to create admin email and password
 ```
 
-### 4. Deploy
+### 4. Pre-Deployment Check
 
 ```bash
-chmod +x deploy.sh
-./deploy.sh
+./scripts/prepare-deployment.sh
 ```
 
-The website will be available at `http://localhost:8080`
+### 5. Deploy
+
+```bash
+docker compose up --build -d
+```
+
+The website will be available at:
+- Website: `https://sishairven.com`
+- Admin: `https://sishairven.com/admin`
 
 ## Manual Setup
 
@@ -123,15 +153,37 @@ sishairven.com, *.sishairven.com {
 sishairven/
 ├── src/
 │   ├── routes/
-│   │   ├── +page.svelte      # Main page
-│   │   └── api/
-│   │       └── book/         # Booking API endpoint
+│   │   ├── +page.svelte           # Main landing page
+│   │   ├── admin/                 # Admin dashboard
+│   │   │   ├── +page.svelte       # Admin overview
+│   │   │   ├── analytics/         # Analytics dashboard
+│   │   │   └── appointments/      # Appointment management
+│   │   ├── api/
+│   │   │   ├── admin/
+│   │   │   │   ├── login/         # Admin login API
+│   │   │   │   ├── stats/         # Statistics API
+│   │   │   │   ├── appointments/  # Appointment CRUD API
+│   │   │   │   └── clicks/        # Click tracking API
+│   │   │   ├── book/              # Booking API
+│   │   │   └── subscribe/         # Newsletter API
+│   │   ├── shop/                  # Shop page
+│   │   └── blog/                  # Blog pages
 │   ├── lib/
-│   │   └── db.ts             # Database utilities
-│   ├── app.css               # Global styles
-│   └── app.html              # HTML template
+│   │   ├── auth/                  # Authentication system
+│   │   ├── db/                    # SQLite database layer
+│   │   ├── i18n/                  # Internationalization
+│   │   │   └── locales/           # Translation files
+│   │   │       ├── en/            # English
+│   │   │       ├── es/            # Spanish
+│   │   │       ├── fr/            # French
+│   │   │       └── de/            # German
+│   │   ├── security/              # Security utilities
+│   │   └── types/                 # TypeScript types
+│   ├── app.css                    # Global styles
+│   └── app.html                   # HTML template
 ├── static/
-│   ├── bg/                   # Background images
+│   ├── bg/                        # Background images
+│   └── phoenix-worker.js          # Analytics worker
 │   ├── hair.WEBP
 │   ├── nails.WEBP
 │   ├── skincare.WEBP
@@ -144,16 +196,89 @@ sishairven/
 
 ## Environment Variables
 
-The application uses the following environment variables:
+### Required
 
-- `DB_PATH` - Path to appointments JSON file (default: `/data/appointments.json`)
-- `NODE_ENV` - Environment (production/development)
-- `PORT` - Server port (default: 3000)
-- `HOST` - Server host (default: 0.0.0.0)
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `PUBLIC_SITE_URL` | Your website URL | `https://sishairven.com` |
+| `ADMIN_EMAIL` | Admin login email | `admin@sishairven.com` |
+| `ADMIN_PASSWORD_HASH` | Hashed admin password | (generate with `npm run setup:admin`) |
+| `ADMIN_API_TOKEN` | API access token | (generate with `npm run setup:admin`) |
+
+### Database
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_PATH` | SQLite database path | `/data/appointments.db` |
+| `DATABASE_URL` | Database connection URL | `file:/data/appointments.db` |
+
+### Optional Integrations
+
+| Variable | Description | Required For |
+|----------|-------------|--------------|
+| `PUBLIC_GA4_ID` | Google Analytics 4 ID | Analytics |
+| `PUBLIC_ADSENSE_CLIENT` | Google AdSense Publisher ID | Ads |
+| `PUBLIC_AMAZON_ASSOC_TAG_US` | Amazon Associates US tag | Affiliate links |
+| `PUBLIC_AMAZON_ASSOC_TAG_UK` | Amazon Associates UK tag | UK affiliate links |
+| `PUBLIC_AMAZON_ASSOC_TAG_DE` | Amazon Associates DE tag | German affiliate links |
+| `SENTRY_DSN` | Sentry error tracking | Error monitoring |
+| `CLIKA_API_KEY` | Phoenix Clika API key | Ad fraud protection |
+
+### Security
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RATE_LIMIT_REQUESTS_PER_MINUTE` | Rate limit per IP | `60` |
+| `CSP_NONCE_SECRET` | CSP nonce secret | (generate with openssl) |
 
 ## Data Persistence
 
-Appointment data is stored in `/data/appointments.json` as a JSON file. The data directory is mounted as a Docker volume for persistence across container restarts.
+All data is stored in SQLite database (`/data/appointments.db`) with the following tables:
+- `appointments` - Booking requests
+- `click_tracking` - Affiliate link clicks
+- `newsletter_subscriptions` - Email subscribers
+- `audit_log` - Admin actions
+
+The data directory is mounted as a Docker volume for persistence across container restarts.
+
+## Admin Dashboard
+
+Access the admin dashboard at `https://sishairven.com/admin`
+
+### First Time Setup
+
+1. Generate admin credentials:
+   ```bash
+   npm run setup:admin
+   ```
+
+2. Add generated values to `.env`:
+   ```env
+   ADMIN_EMAIL=your-email@domain.com
+   ADMIN_PASSWORD_HASH=<generated-hash>
+   ADMIN_API_TOKEN=<generated-token>
+   ```
+
+3. Restart the application:
+   ```bash
+   docker compose restart
+   ```
+
+### Features
+
+- **Dashboard Overview** - View today's stats, recent appointments, click analytics
+- **Appointments** - View, confirm, cancel, or delete bookings
+- **Analytics** - Track affiliate clicks by country and product
+- **Real-time Data** - All data pulled from SQLite database
+
+### API Authentication
+
+For programmatic access, use the Admin API Token:
+
+```bash
+curl -H "Authorization: Bearer YOUR_ADMIN_API_TOKEN" \
+  https://sishairven.com/api/admin/stats
+```
 
 ## Development
 
