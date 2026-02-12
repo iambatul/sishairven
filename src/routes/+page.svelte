@@ -1,901 +1,274 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import SEO from '$lib/components/SEO.svelte';
-	import { generateLocalBusinessSchema } from '$lib/utils/seo';
-	
-	let formData = {
-		name: '',
-		phone: '',
-		email: '',
-		service: '',
-		date: '',
-		message: ''
-	};
-	
-	let submitting = false;
-	let submitMessage = '';
-	let submitError = '';
-	
-	// Background images
-	const bgImages = [
-		'/bg/bg1.webp',
-		'/bg/bg2.webp',
-		'/bg/bg3.webp',
-		'/bg/bg4.webp',
-		'/bg/bg5.webp'
-	];
-	
+	import { curatedProducts, createAmazonLink } from '$lib/utils/amazon';
+	import { posts } from '$lib/content/posts';
+
+	// Background images for hero
+	const bgImages = ['/bg/bg1.webp', '/bg/bg2.webp', '/bg/bg3.webp', '/bg/bg4.webp', '/bg/bg5.webp'];
 	let currentBgIndex = 0;
-	
-	// Collapsible sections state
-	let expandedSections = {
-		hair: false,
-		nails: false,
-		skincare: false,
-		events: false
-	};
-	
-	function toggleSection(section: 'hair' | 'nails' | 'skincare' | 'events') {
-		expandedSections[section] = !expandedSections[section];
-	}
-	
+
+	// Featured products (top 3)
+	$: featuredProducts = curatedProducts.slice(0, 3);
+
+	// Latest blog posts (top 3)
+	$: latestPosts = posts.filter(p => p.published).slice(0, 3);
+
 	onMount(() => {
-		if (typeof window !== 'undefined') {
-		}
-		
-		// Cycle through background images
-		if (typeof window !== 'undefined') {
-			const interval = setInterval(() => {
-				currentBgIndex = (currentBgIndex + 1) % bgImages.length;
-			}, 5000); // Change every 5 seconds
-			
-			// Smooth scroll for anchor links
-			const links = document.querySelectorAll('a[href^="#"]');
-			const clickHandlers: Array<(e: Event) => void> = [];
-			
-			links.forEach(link => {
-				const handler = (e: Event) => {
-					e.preventDefault();
-					const href = link.getAttribute('href');
-					if (href) {
-						scrollToSection(href.substring(1));
-					}
-				};
-				clickHandlers.push(handler);
-				link.addEventListener('click', handler);
-			});
-			
-			// Cleanup on unmount
-			return () => {
-				clearInterval(interval);
-				links.forEach((link, i) => {
-					link.removeEventListener('click', clickHandlers[i]);
-				});
-			};
-		}
+		const interval = setInterval(() => {
+			currentBgIndex = (currentBgIndex + 1) % bgImages.length;
+		}, 6000);
+		return () => clearInterval(interval);
 	});
-	
-	async function handleSubmit(e: Event) {
-		e.preventDefault();
-		submitting = true;
-		submitMessage = '';
-		submitError = '';
-		
-		try {
-			const response = await fetch('/api/book', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(formData)
-			});
-			
-			const data = await response.json();
-			
-			if (response.ok) {
-				submitMessage = data.message || 'Appointment request submitted successfully!';
-				formData = {
-					name: '',
-					phone: '',
-					email: '',
-					service: '',
-					date: '',
-					message: ''
-				};
-			} else {
-				submitError = data.error || 'Failed to submit appointment request';
-			}
-		} catch (error) {
-			submitError = 'An error occurred. Please try again.';
-			console.error(error);
-		} finally {
-			submitting = false;
-		}
-	}
-	
-	function scrollToSection(id: string) {
-		const element = document.getElementById(id);
-		if (element) {
-			element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}
-	}
 </script>
 
 <SEO 
-	title="Premium Hair Salon & Beauty Services"
-	description="Hairven by Elyn - Premier hair salon in Cortland, NY. Expert styling, French Balayage, coloring, nails, and skincare. Book your appointment today."
-	schema={generateLocalBusinessSchema()}
+	title="Expert-Picked Hair Tools & Products"
+	description="Hairven by Elyn — salon-approved hair tools, treatments, and styling products. Curated picks from professional stylists. Shop the best hair dryers, flat irons, and treatments."
 />
 
-<!-- Call Button (Top Right) - Desktop Only -->
-<div class="hidden md:block fixed top-4 right-4 z-50">
-	<a
-		href="tel:6072526610"
-		class="btn-call"
-	>
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-		</svg>
-		<span class="hidden sm:inline">607.252.6610</span>
-	</a>
-</div>
-
-<!-- Immersive Background -->
-<div class="fixed inset-0 z-0 overflow-hidden">
+<!-- ═══════════════════════════════════════════════════════
+     HERO — Full-bleed background with rotating images
+     ═══════════════════════════════════════════════════════ -->
+<section class="relative min-h-[85vh] sm:min-h-[90vh] flex items-center overflow-hidden">
+	<!-- Background Carousel -->
 	{#each bgImages as bg, index}
 		<div 
-			class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-2000 ease-in-out {index === currentBgIndex ? 'opacity-100' : 'opacity-0'}"
+			class="absolute inset-0 bg-cover bg-center transition-opacity duration-[2000ms] ease-in-out {index === currentBgIndex ? 'opacity-100' : 'opacity-0'}"
 			style="background-image: url('{bg}');"
 		></div>
 	{/each}
-	<div class="absolute inset-0 bg-black/70"></div>
-</div>
+	<div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/80"></div>
 
-<!-- Navigation -->
-<nav class="fixed top-0 left-0 right-0 z-40 bg-black/60 backdrop-blur-md border-b border-pink-bright/30">
-	<div class="container-custom">
-		<div class="flex items-center justify-between h-20 pr-4 md:pr-32">
-			<div class="text-3xl sm:text-4xl md:text-6xl font-handwritten font-bold text-pink-bright drop-shadow-lg">
-				Hairven by Elyn
+	<!-- Hero Content -->
+	<div class="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-16 text-center">
+		<p class="text-sm sm:text-base tracking-widest uppercase text-pink-light mb-4 drop-shadow">Salon-Approved Picks</p>
+		<h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-handwritten font-bold text-white mb-6 drop-shadow-2xl leading-tight">
+			Your Hair Deserves<br class="hidden sm:block" /> the Best
+		</h1>
+		<p class="text-base sm:text-lg md:text-xl text-gray-200 max-w-2xl mx-auto mb-8 drop-shadow-lg leading-relaxed">
+			Professional-grade tools and treatments, hand-picked by our stylists. 
+			Every product tested in our salon before we recommend it to you.
+		</p>
+		<div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+			<a href="/shop" class="px-8 py-3.5 bg-pink-bright text-black font-semibold rounded-full hover:bg-pink-medium transition-all shadow-lg hover:shadow-pink-bright/40 text-base">
+				Shop Our Picks
+			</a>
+			<a href="/blog" class="px-8 py-3.5 border-2 border-white/60 text-white font-semibold rounded-full hover:bg-white/10 transition-all text-base">
+				Read Reviews
+			</a>
+		</div>
+	</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     TRUST BAR
+     ═══════════════════════════════════════════════════════ -->
+<section class="py-6 sm:py-8 border-b" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+	<div class="max-w-5xl mx-auto px-4 sm:px-6">
+		<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
+			<div>
+				<p class="text-2xl sm:text-3xl font-bold text-pink-bright">42+</p>
+				<p class="text-xs sm:text-sm mt-1" style="color: var(--text-muted);">Products Tested</p>
 			</div>
-			<div class="hidden md:flex items-center space-x-8">
-				<button on:click={() => scrollToSection('home')} class="text-[var(--text-secondary)] hover:text-pink-bright transition-colors">Home</button>
-				<button on:click={() => scrollToSection('about')} class="text-[var(--text-secondary)] hover:text-pink-bright transition-colors">About</button>
-				<button on:click={() => scrollToSection('services')} class="text-[var(--text-secondary)] hover:text-pink-bright transition-colors">Services</button>
-				<button on:click={() => scrollToSection('book')} class="btn-primary">Book Online</button>
+			<div>
+				<p class="text-2xl sm:text-3xl font-bold text-pink-bright">4.6+</p>
+				<p class="text-xs sm:text-sm mt-1" style="color: var(--text-muted);">Avg. Rating</p>
 			</div>
-			<div class="md:hidden">
-				<button on:click={() => scrollToSection('book')} class="btn-primary text-sm px-4 py-2">Book</button>
+			<div>
+				<p class="text-2xl sm:text-3xl font-bold text-pink-bright">100%</p>
+				<p class="text-xs sm:text-sm mt-1" style="color: var(--text-muted);">Salon Tested</p>
+			</div>
+			<div>
+				<p class="text-2xl sm:text-3xl font-bold text-pink-bright">0%</p>
+				<p class="text-xs sm:text-sm mt-1" style="color: var(--text-muted);">Markup</p>
 			</div>
 		</div>
 	</div>
-</nav>
+</section>
 
-<!-- Hero Section -->
-<section id="home" class="relative pt-20 min-h-screen flex items-center z-10">
-	<div class="container-custom relative z-10">
-		<div class="text-center">
-			<h1 class="heading-primary mb-6 drop-shadow-2xl text-pink-bright">Hairven by Elyn</h1>
-			<p class="text-xl md:text-2xl text-[var(--text-secondary)] mb-8 max-w-2xl mx-auto drop-shadow-lg">
-				Where beauty meets artistry. Experience premium hair and beauty services in the heart of Cortland, NY.
+<!-- ═══════════════════════════════════════════════════════
+     FEATURED PRODUCTS
+     ═══════════════════════════════════════════════════════ -->
+<section class="py-14 sm:py-20" style="background-color: var(--bg-primary);">
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		<div class="text-center mb-10 sm:mb-14">
+			<h2 class="text-3xl sm:text-4xl font-display mb-3" style="color: var(--text-primary);">Staff Favorites</h2>
+			<p class="max-w-xl mx-auto text-sm sm:text-base" style="color: var(--text-muted);">
+				The tools and treatments our stylists reach for every single day.
 			</p>
-			<div class="flex flex-col sm:flex-row gap-4 justify-center">
-				<button on:click={() => scrollToSection('services')} class="btn-primary">View Services</button>
-				<button on:click={() => scrollToSection('book')} class="btn-secondary">Book Appointment</button>
-			</div>
 		</div>
-	</div>
-</section>
 
-<!-- About Section -->
-<section id="about" class="relative section-padding z-10">
-	<div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-	<div class="container-custom relative z-10">
-		<h2 class="heading-secondary text-center mb-12 text-pink-bright drop-shadow-lg">About Us</h2>
-		<div class="max-w-4xl mx-auto">
-			<div class="prose prose-invert max-w-none">
-				<p class="text-lg text-[var(--text-secondary)] leading-relaxed mb-6 drop-shadow">
-					Welcome to <span class="text-pink-bright font-semibold">Hairven by Elyn</span>
-				</p>
-				<p class="text-[var(--text-secondary)] leading-relaxed mb-6 drop-shadow">
-					At Hairven by Elyn, every corner radiates warmth, light, and carefully curated treasures. Known for her eye for detail and passion for creating joy through everyday beauty, Elina Makna has built a space that feels vibrant, welcoming, and full of life. "I wanted to create a store where every visit is an experience—whether you're exploring unique gifts, home essentials, or simply stopping by for a moment of inspiration," she says.
-				</p>
-				<p class="text-[var(--text-secondary)] leading-relaxed mb-6 drop-shadow">
-					Born and raised in New York, Elina developed a natural flair for style and design from a young age. Her experiences traveling and exploring different cultures have shaped her vision, giving the store a modern, eclectic feel that reflects both sophistication and playfulness.
-				</p>
-				<p class="text-[var(--text-secondary)] leading-relaxed mb-6 drop-shadow">
-					This is more than just a shop—it's a celebration of life, beauty, and discovery. Every product is thoughtfully chosen to delight and inspire, ensuring that every visitor leaves feeling seen, valued, and uplifted.
-				</p>
-				<p class="text-pink-medium text-lg font-semibold mt-8 drop-shadow">
-					Step inside and discover a space where warmth, style, and joy come together.
-				</p>
-				<p class="text-pink-bright text-right mt-4 font-handwritten text-xl drop-shadow-lg">
-					— Elina Makna, Owner & Chief Stylist
-				</p>
-			</div>
-		</div>
-	</div>
-</section>
-
-<!-- Services Section -->
-<section id="services" class="relative section-padding z-10">
-	<div class="absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
-	<div class="container-custom relative z-10">
-		<h2 class="heading-secondary text-center mb-16 text-pink-bright drop-shadow-lg">Our Services</h2>
-		
-		<!-- Hair Services -->
-		<div class="mb-16">
-			<div class="service-image-container mb-8">
-				<div class="flex items-center justify-center gap-3 mb-4">
-					<span class="text-3xl">✂️</span>
-					<h3 class="heading-secondary">Hair Services</h3>
-				</div>
-				<button
-					on:click={() => toggleSection('hair')}
-					class="w-full cursor-pointer hover:opacity-90 transition-opacity relative group"
-					aria-label="Toggle Hair Services pricing"
-				>
-					<img src="/hair.WEBP" alt="Hair Services" class="w-full rounded-lg shadow-xl" />
-					<div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 rounded-lg transition-colors flex items-center justify-center">
-						<svg class="w-12 h-12 text-[var(--text-primary)] transform transition-transform {expandedSections.hair ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-						</svg>
-					</div>
-				</button>
-			</div>
-			
-			{#if expandedSections.hair}
-			<div class="price-table-container animate-slideDown">
-			<!-- Cut & Style -->
-			<div class="mb-12">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Cut & Style</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Haircut</span>
-							<span class="text-pink-bright font-bold text-lg">$184</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Blow-Dry</span>
-							<span class="text-pink-bright font-bold text-lg">$124</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Updo</span>
-							<span class="text-pink-bright font-bold text-lg">$184</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Extensions, Hair Pieces, Wig Cuts & Styling</span>
-							<span class="text-pink-bright font-bold text-lg">By consultation</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Conditioning Treatments -->
-			<div class="mb-12 price-table-container">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Conditioning Treatments</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Milbon Headspa</span>
-							<span class="text-pink-bright font-bold text-lg">$289</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Milbon Smooth / Anti-Frizz</span>
-							<span class="text-pink-bright font-bold text-lg">$169</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Milbon Repair</span>
-							<span class="text-pink-bright font-bold text-lg">$189</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Various Milbon & Kerastase Professional Treatments</span>
-							<span class="text-pink-bright font-bold text-lg">$209</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Shu Bar "The Ultimate"</span>
-							<span class="text-pink-bright font-bold text-lg">$189</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Fusio-Dose</span>
-							<span class="text-pink-bright font-bold text-lg">$94</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Olaplex</span>
-							<span class="text-pink-bright font-bold text-lg">$79</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Color -->
-			<div class="mb-12 price-table-container">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Color</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">One Process</span>
-							<span class="text-pink-bright font-bold text-lg">$199</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">One Process with Partial Highlights</span>
-							<span class="text-pink-bright font-bold text-lg">$252</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Partial Highlights</span>
-							<span class="text-pink-bright font-bold text-lg">$279</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Full Highlights (Balayage/Foils)</span>
-							<span class="text-pink-bright font-bold text-lg">$339</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Gloss</span>
-							<span class="text-pink-bright font-bold text-lg">$109</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Two Process / Color Correction</span>
-							<span class="text-pink-bright font-bold text-lg">By consultation</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Straightening Treatments -->
-			<div class="mb-12 price-table-container">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Straightening Treatments</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Lasio Keratin / Magic Sleek</span>
-							<span class="text-pink-bright font-bold text-lg">$649</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Elyn's Braids & Ponytails -->
-			<div class="mb-12 price-table-container">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Elyn's Braids & Ponytails</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Dry Braiding/Ponytail</span>
-							<span class="text-pink-bright font-bold text-lg">$74</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Wash, Blow-Dry & Braiding/Ponytail</span>
-							<span class="text-pink-bright font-bold text-lg">$194</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Extension Ponytail</span>
-							<span class="text-pink-bright font-bold text-lg">$111</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Custom Braiding/Ponytail</span>
-							<span class="text-pink-bright font-bold text-lg">By consultation</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			</div>
-			{/if}
-		</div>
-		
-		<!-- Nail Services -->
-		<div class="mb-16">
-			<div class="service-image-container mb-8">
-				<div class="flex items-center justify-center gap-3 mb-4">
-					<span class="text-3xl">💅</span>
-					<h3 class="heading-secondary">Nail Services</h3>
-				</div>
-				<button
-					on:click={() => toggleSection('nails')}
-					class="w-full cursor-pointer hover:opacity-90 transition-opacity relative group"
-					aria-label="Toggle Nail Services pricing"
-				>
-					<img src="/nails.WEBP" alt="Nail Services" class="w-full rounded-lg shadow-xl" />
-					<div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 rounded-lg transition-colors flex items-center justify-center">
-						<svg class="w-12 h-12 text-[var(--text-primary)] transform transition-transform {expandedSections.nails ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-						</svg>
-					</div>
-				</button>
-			</div>
-			{#if expandedSections.nails}
-			<div class="price-table-container animate-slideDown">
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Classic Manicure / Pedicure</span>
-							<span class="text-pink-bright font-bold text-lg">$55 / $110</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Glue Manicure</span>
-							<span class="text-pink-bright font-bold text-lg">$65</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Polish Change (Hands / Feet)</span>
-							<span class="text-pink-bright font-bold text-lg">$35 / $50</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Shellac Manicure / Pedicure</span>
-							<span class="text-pink-bright font-bold text-lg">$70 / $125</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Dazzle Dry Manicure / Pedicure</span>
-							<span class="text-pink-bright font-bold text-lg">$75 / $130</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			{/if}
-		</div>
-		
-		<!-- Skincare & Beauty -->
-		<div class="mb-16">
-			<div class="service-image-container mb-8">
-				<div class="flex items-center justify-center gap-3 mb-4">
-					<span class="text-3xl">✨</span>
-					<h3 class="heading-secondary">Skincare & Beauty</h3>
-				</div>
-				<button
-					on:click={() => toggleSection('skincare')}
-					class="w-full cursor-pointer hover:opacity-90 transition-opacity relative group"
-					aria-label="Toggle Skincare & Beauty pricing"
-				>
-					<img src="/skincare.WEBP" alt="Skincare & Beauty" class="w-full rounded-lg shadow-xl" />
-					<div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 rounded-lg transition-colors flex items-center justify-center">
-						<svg class="w-12 h-12 text-[var(--text-primary)] transform transition-transform {expandedSections.skincare ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-						</svg>
-					</div>
-				</button>
-			</div>
-			
-			{#if expandedSections.skincare}
-			<div class="price-table-container animate-slideDown">
-			<!-- Makeup -->
-			<div class="mb-12">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Makeup</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Full Makeup Application</span>
-							<span class="text-pink-bright font-bold text-lg">$175</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Fast Face Makeup Application</span>
-							<span class="text-pink-bright font-bold text-lg">$105</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Makeup Lesson</span>
-							<span class="text-pink-bright font-bold text-lg">$250/HR</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Brows & Lashes -->
-			<div class="mb-12 price-table-container">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Brows & Lashes</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Brow Shaping (Tweezing or Waxing)</span>
-							<span class="text-pink-bright font-bold text-lg">$85</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">False Eye Lashes</span>
-							<span class="text-pink-bright font-bold text-lg">$85</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Chin / Lip / Nose & Ear Wax</span>
-							<span class="text-pink-bright font-bold text-lg">$40</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Facials -->
-			<div class="mb-12 price-table-container">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Facials</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Facials</span>
-							<span class="text-pink-bright font-bold text-lg">$200</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Microcurrent / Galvanic/Bio Stim Add-On</span>
-							<span class="text-pink-bright font-bold text-lg">$75</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Lash Extensions -->
-			<div class="mb-12 price-table-container">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Lash Extensions</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Natural Set</span>
-							<span class="text-pink-bright font-bold text-lg">$280</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Full Lash Set</span>
-							<span class="text-pink-bright font-bold text-lg">$350</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Volume Set</span>
-							<span class="text-pink-bright font-bold text-lg">$400</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Xtreme Volume Set</span>
-							<span class="text-pink-bright font-bold text-lg">$450</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Refills (60min / 75min / 90min)</span>
-							<span class="text-pink-bright font-bold text-lg">$160 / $180 / $200</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Removal</span>
-							<span class="text-pink-bright font-bold text-lg">$75</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Body Waxing -->
-			<div class="mb-12 price-table-container">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6 text-center">Body Waxing</h4>
-				<div class="grid gap-4">
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Brazilian</span>
-							<span class="text-pink-bright font-bold text-lg">$95</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Bikini</span>
-							<span class="text-pink-bright font-bold text-lg">$65</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Under Arms</span>
-							<span class="text-pink-bright font-bold text-lg">$40</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Full Arms</span>
-							<span class="text-pink-bright font-bold text-lg">$85</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">½ Leg / Full Leg</span>
-							<span class="text-pink-bright font-bold text-lg">$75 / $105</span>
-						</div>
-					</div>
-					<div class="price-card">
-						<div class="flex justify-between items-center">
-							<span class="text-gray-700 dark:text-[var(--text-secondary)]">Stomach</span>
-							<span class="text-pink-bright font-bold text-lg">$50</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			</div>
-			{/if}
-		</div>
-		
-		<!-- Events and Special Services -->
-		<div class="mb-16">
-			<div class="service-image-container mb-8">
-				<div class="flex items-center justify-center gap-3 mb-4">
-					<span class="text-3xl">🎉</span>
-					<h3 class="heading-secondary">Events and Special Services</h3>
-				</div>
-				<button
-					on:click={() => toggleSection('events')}
-					class="w-full cursor-pointer hover:opacity-90 transition-opacity relative group"
-					aria-label="Toggle Events and Special Services pricing"
-				>
-					<img src="/events.WEBP" alt="Events" class="w-full rounded-lg shadow-xl" />
-					<div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 rounded-lg transition-colors flex items-center justify-center">
-						<svg class="w-12 h-12 text-[var(--text-primary)] transform transition-transform {expandedSections.events ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-						</svg>
-					</div>
-				</button>
-			</div>
-			{#if expandedSections.events}
-			<div class="price-table-container animate-slideDown">
-				<div class="price-card text-center">
-					<p class="text-lg text-gray-700 dark:text-[var(--text-secondary)] mb-4">
-						<strong class="text-pink-bright">Weddings, Special Events, Group Events, Barrett's Braids</strong>
-					</p>
-					<p class="text-gray-700 dark:text-[var(--text-secondary)] mb-4">
-						Contact to customize: <a href="tel:6072526610" class="text-pink-bright hover:text-pink-dark transition-colors font-semibold">607.252.6610</a>
-					</p>
-					<p class="text-[var(--text-muted)] dark:text-[var(--text-muted)] italic">(Pricing by consultation)</p>
-				</div>
-			</div>
-			{/if}
-		</div>
-		
-		<!-- Additional Information -->
-		<div class="price-table-container">
-			<div class="price-card">
-				<h4 class="text-2xl font-semibold text-pink-bright mb-6">Additional Information</h4>
-				<ul class="space-y-4 text-gray-700 dark:text-[var(--text-secondary)]">
-					<li>
-						<strong class="text-pink-bright">Specialization:</strong> The salon specializes in the French technique of <strong class="text-pink-medium">Balayage</strong>
-					</li>
-					<li>
-						<strong class="text-pink-bright">Product Lines:</strong> Offers <strong class="text-pink-medium">Surratt Beauty</strong> and <strong class="text-pink-medium">111 Skin</strong> products for makeup and skincare services
-					</li>
-					<li>
-						<strong class="text-pink-bright">Pricing Note:</strong> Prices are subject to change. Contact the salon directly at <a href="tel:6072526610" class="text-pink-bright hover:text-pink-dark transition-colors">607.252.6610</a> for current pricing and appointments
-					</li>
-				</ul>
-			</div>
-		</div>
-	</div>
-</section>
-
-<!-- Hours & Location -->
-<section id="hours" class="relative section-padding z-10">
-	<div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-	<div class="container-custom relative z-10">
-		<h2 class="heading-secondary text-center mb-12 text-pink-bright drop-shadow-lg">Hours & Location</h2>
-		<div class="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-			<div>
-				<h3 class="text-2xl font-semibold text-pink-bright mb-6 drop-shadow">Business Hours</h3>
-				<div class="space-y-3 text-[var(--text-secondary)]">
-					<div class="flex justify-between">
-						<span>MONDAY</span>
-						<span class="text-pink-bright font-semibold">9:00AM TO 6:00PM</span>
-					</div>
-					<div class="flex justify-between">
-						<span>TUESDAY</span>
-						<span class="text-pink-bright font-semibold">8:30AM TO 7:00PM</span>
-					</div>
-					<div class="flex justify-between">
-						<span>WEDNESDAY</span>
-						<span class="text-pink-bright font-semibold">8:30AM TO 7:00PM</span>
-					</div>
-					<div class="flex justify-between">
-						<span>THURSDAY</span>
-						<span class="text-pink-bright font-semibold">8:30AM TO 8:00PM</span>
-					</div>
-					<div class="flex justify-between">
-						<span>FRIDAY</span>
-						<span class="text-pink-bright font-semibold">8:30AM TO 7:00PM</span>
-					</div>
-					<div class="flex justify-between">
-						<span>SATURDAY</span>
-						<span class="text-pink-bright font-semibold">8:30AM TO 6:00PM</span>
-					</div>
-					<div class="flex justify-between">
-						<span>SUNDAY</span>
-						<span class="text-pink-medium">CLOSED</span>
-					</div>
-				</div>
-			</div>
-			<div>
-				<h3 class="text-2xl font-semibold text-pink-bright mb-6 drop-shadow">Location</h3>
-				<p class="text-lg text-[var(--text-secondary)] mb-4 drop-shadow">
-					64 OWEGO ST<br />
-					CORTLAND NY 13045
-				</p>
-				<p class="text-[var(--text-secondary)] mb-4 drop-shadow">
-					Phone: <a href="tel:6072526610" class="text-pink-bright hover:text-pink-dark transition-colors font-semibold">607.252.6610</a>
-				</p>
-			</div>
-		</div>
-	</div>
-</section>
-
-<!-- Book Online Section -->
-<section id="book" class="relative section-padding z-10">
-	<div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-	<div class="container-custom relative z-10">
-		<h2 class="heading-secondary text-center mb-12 text-pink-bright drop-shadow-lg">Book Your Appointment</h2>
-		<div class="max-w-2xl mx-auto">
-			<form on:submit={handleSubmit} class="price-card space-y-6">
-				<div>
-					<label for="name" class="block text-pink-bright font-semibold mb-2">Name *</label>
-					<input
-						type="text"
-						id="name"
-						bind:value={formData.name}
-						required
-						class="w-full px-4 py-3 bg-black-light border-2 border-pink-bright/30 rounded-lg text-[var(--text-secondary)] focus:outline-none focus:border-pink-bright transition-colors"
-					/>
-				</div>
-				
-				<div>
-					<label for="phone" class="block text-pink-bright font-semibold mb-2">Phone *</label>
-					<input
-						type="tel"
-						id="phone"
-						bind:value={formData.phone}
-						required
-						class="w-full px-4 py-3 bg-black-light border-2 border-pink-bright/30 rounded-lg text-[var(--text-secondary)] focus:outline-none focus:border-pink-bright transition-colors"
-					/>
-				</div>
-				
-				<div>
-					<label for="email" class="block text-pink-bright font-semibold mb-2">Email *</label>
-					<input
-						type="email"
-						id="email"
-						bind:value={formData.email}
-						required
-						class="w-full px-4 py-3 bg-black-light border-2 border-pink-bright/30 rounded-lg text-[var(--text-secondary)] focus:outline-none focus:border-pink-bright transition-colors"
-					/>
-				</div>
-				
-				<div>
-					<label for="service" class="block text-pink-bright font-semibold mb-2">Service *</label>
-					<select
-						id="service"
-						bind:value={formData.service}
-						required
-						class="w-full px-4 py-3 bg-black-light border-2 border-pink-bright/30 rounded-lg text-[var(--text-secondary)] focus:outline-none focus:border-pink-bright transition-colors"
-					>
-						<option value="">Select a service</option>
-						<optgroup label="Hair Services">
-							<option value="Haircut">Haircut</option>
-							<option value="Blow-Dry">Blow-Dry</option>
-							<option value="Updo">Updo</option>
-							<option value="One Process">One Process</option>
-							<option value="Full Highlights">Full Highlights (Balayage/Foils)</option>
-							<option value="Partial Highlights">Partial Highlights</option>
-							<option value="Milbon Headspa">Milbon Headspa</option>
-							<option value="Braiding/Ponytail">Braiding/Ponytail</option>
-						</optgroup>
-						<optgroup label="Nail Services">
-							<option value="Classic Manicure">Classic Manicure</option>
-							<option value="Classic Pedicure">Classic Pedicure</option>
-							<option value="Shellac Manicure">Shellac Manicure</option>
-						</optgroup>
-						<optgroup label="Beauty Services">
-							<option value="Full Makeup">Full Makeup Application</option>
-							<option value="Brow Shaping">Brow Shaping</option>
-							<option value="Lash Extensions">Lash Extensions</option>
-							<option value="Facial">Facial</option>
-						</optgroup>
-						<option value="Other">Other / Consultation</option>
-					</select>
-				</div>
-				
-					<div>
-						<label for="date" class="block text-pink-bright font-semibold mb-2">Preferred Date *</label>
-						<input
-							type="date"
-							id="date"
-							bind:value={formData.date}
-							min={new Date().toISOString().split('T')[0]}
-							max={new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-							required
-							class="w-full px-4 py-3 bg-black-light border-2 border-pink-bright/30 rounded-lg text-[var(--text-secondary)] focus:outline-none focus:border-pink-bright transition-colors"
+		<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+			{#each featuredProducts as product}
+				<div class="theme-card group">
+					<div class="aspect-square p-6 flex items-center justify-center overflow-hidden" style="background-color: var(--product-img-bg);">
+						<img 
+							src={product.imageUrl} 
+							alt={product.title}
+							class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+							loading="lazy"
 						/>
-						<p class="text-xs text-[var(--text-muted)] mt-1">Appointments can be booked up to 3 months in advance</p>
 					</div>
-				
-				<div>
-					<label for="message" class="block text-pink-bright font-semibold mb-2">Message</label>
-					<textarea
-						id="message"
-						bind:value={formData.message}
-						rows="4"
-						class="w-full px-4 py-3 bg-black-light border-2 border-pink-bright/30 rounded-lg text-[var(--text-secondary)] focus:outline-none focus:border-pink-bright transition-colors resize-none"
-					></textarea>
+					<div class="p-5 sm:p-6">
+						<h3 class="text-base sm:text-lg font-semibold mb-1.5" style="color: var(--text-primary);">{product.title}</h3>
+						<p class="text-sm mb-3 line-clamp-2" style="color: var(--text-muted);">{product.description}</p>
+						
+						<div class="flex items-center mb-3">
+							<div class="flex text-gold-bright">
+								{#each Array(5) as _, i}
+									<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 {i < Math.floor(product.rating) ? 'fill-current' : ''}" style={i >= Math.floor(product.rating) ? 'color: var(--border-color);' : ''} viewBox="0 0 20 20">
+										<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+									</svg>
+								{/each}
+							</div>
+							<span class="text-xs sm:text-sm ml-1.5" style="color: var(--text-muted);">({product.reviewCount.toLocaleString()})</span>
+						</div>
+						
+						<div class="flex items-center justify-between">
+							<span class="text-xl sm:text-2xl font-bold text-pink-bright">{product.price}</span>
+							<a 
+								href={createAmazonLink(product.asin)}
+								class="px-4 sm:px-5 py-2 bg-pink-bright font-semibold rounded-lg hover:bg-pink-medium transition-colors text-sm"
+								style="color: var(--text-inverse);"
+								rel="sponsored noopener noreferrer"
+								target="_blank"
+							>
+								View on Amazon
+							</a>
+						</div>
+					</div>
 				</div>
-				
-				{#if submitMessage}
-					<div class="bg-green-900/30 border-2 border-green-500 rounded-lg p-4 text-green-300">
-						{submitMessage}
-					</div>
-				{/if}
-				
-				{#if submitError}
-					<div class="bg-red-900/30 border-2 border-red-500 rounded-lg p-4 text-red-300">
-						{submitError}
-					</div>
-				{/if}
-				
-				<button
-					type="submit"
-					disabled={submitting}
-					class="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{submitting ? 'Submitting...' : 'Submit Appointment Request'}
-				</button>
-			</form>
+			{/each}
+		</div>
+
+		<div class="text-center mt-10 sm:mt-12">
+			<a href="/shop" class="inline-flex items-center gap-2 px-8 py-3 border-2 border-pink-bright text-pink-bright font-semibold rounded-full hover:bg-pink-bright hover:text-black transition-all text-sm sm:text-base">
+				View All Products
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+				</svg>
+			</a>
 		</div>
 	</div>
 </section>
 
-<!-- Footer -->
-<footer class="relative border-t border-pink-bright/30 py-8 z-10">
-	<div class="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
-	<div class="container-custom relative z-10">
-		<div class="text-center text-[var(--text-secondary)]">
-			<p class="text-2xl font-handwritten text-pink-bright mb-2 drop-shadow-lg">Hairven by Elyn</p>
-			<p class="mb-2 drop-shadow">64 OWEGO ST, CORTLAND NY 13045</p>
-			<p class="mb-4">
-				<a href="tel:6072526610" class="text-pink-bright hover:text-pink-dark transition-colors font-semibold drop-shadow">607.252.6610</a>
+<!-- ═══════════════════════════════════════════════════════
+     WHY TRUST US
+     ═══════════════════════════════════════════════════════ -->
+<section class="py-14 sm:py-20" style="background-color: var(--bg-tertiary);">
+	<div class="max-w-5xl mx-auto px-4 sm:px-6">
+		<div class="text-center mb-10 sm:mb-14">
+			<h2 class="text-3xl sm:text-4xl font-display mb-3" style="color: var(--text-primary);">Why Trust Our Picks?</h2>
+			<p class="max-w-xl mx-auto text-sm sm:text-base" style="color: var(--text-muted);">
+				We don't just review products online — we use them on real clients, every day.
 			</p>
-			<p class="text-sm text-[var(--text-muted)] drop-shadow">© {new Date().getFullYear()} Hairven by Elyn. All rights reserved.</p>
+		</div>
+		<div class="grid sm:grid-cols-3 gap-6 sm:gap-8">
+			<div class="theme-card p-6 text-center">
+				<div class="w-12 h-12 rounded-full bg-pink-bright/10 flex items-center justify-center mx-auto mb-4">
+					<svg class="w-6 h-6 text-pink-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+					</svg>
+				</div>
+				<h3 class="font-semibold mb-2 text-sm sm:text-base" style="color: var(--text-primary);">Salon Tested</h3>
+				<p class="text-sm" style="color: var(--text-muted);">Every tool and product has been tested on real clients in our Cortland, NY salon.</p>
+			</div>
+			<div class="theme-card p-6 text-center">
+				<div class="w-12 h-12 rounded-full bg-pink-bright/10 flex items-center justify-center mx-auto mb-4">
+					<svg class="w-6 h-6 text-pink-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+					</svg>
+				</div>
+				<h3 class="font-semibold mb-2 text-sm sm:text-base" style="color: var(--text-primary);">Same Amazon Price</h3>
+				<p class="text-sm" style="color: var(--text-muted);">You pay the exact same price. We earn a small commission at zero extra cost to you.</p>
+			</div>
+			<div class="theme-card p-6 text-center">
+				<div class="w-12 h-12 rounded-full bg-pink-bright/10 flex items-center justify-center mx-auto mb-4">
+					<svg class="w-6 h-6 text-pink-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+					</svg>
+				</div>
+				<h3 class="font-semibold mb-2 text-sm sm:text-base" style="color: var(--text-primary);">Honest Reviews</h3>
+				<p class="text-sm" style="color: var(--text-muted);">We share what actually works — including the products we've tried and wouldn't recommend.</p>
+			</div>
 		</div>
 	</div>
-</footer>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     LATEST FROM THE BLOG
+     ═══════════════════════════════════════════════════════ -->
+{#if latestPosts.length > 0}
+<section class="py-14 sm:py-20" style="background-color: var(--bg-primary);">
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		<div class="text-center mb-10 sm:mb-14">
+			<h2 class="text-3xl sm:text-4xl font-display mb-3" style="color: var(--text-primary);">Latest Reviews & Guides</h2>
+			<p class="max-w-xl mx-auto text-sm sm:text-base" style="color: var(--text-muted);">
+				In-depth reviews, comparisons, and styling tips from our team.
+			</p>
+		</div>
+
+		<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+			{#each latestPosts as post}
+				<a href="/blog/{post.slug}" class="theme-card group block">
+					{#if post.image}
+						<div class="aspect-video overflow-hidden" style="background-color: var(--bg-tertiary);">
+							<img 
+								src={post.image} 
+								alt={post.title}
+								class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+								loading="lazy"
+							/>
+						</div>
+					{/if}
+					<div class="p-5 sm:p-6">
+						<div class="flex items-center gap-2 mb-2">
+							<span class="text-xs px-2 py-0.5 rounded-full bg-pink-bright/10 text-pink-bright font-medium">{post.category}</span>
+							<span class="text-xs" style="color: var(--text-muted);">{post.readingTime} min read</span>
+						</div>
+						<h3 class="font-semibold mb-2 group-hover:text-pink-bright transition-colors text-sm sm:text-base" style="color: var(--text-primary);">{post.title}</h3>
+						<p class="text-sm line-clamp-2" style="color: var(--text-muted);">{post.description}</p>
+					</div>
+				</a>
+			{/each}
+		</div>
+
+		<div class="text-center mt-10 sm:mt-12">
+			<a href="/blog" class="inline-flex items-center gap-2 text-pink-bright hover:text-pink-medium font-semibold transition-colors text-sm sm:text-base">
+				View All Posts
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+				</svg>
+			</a>
+		</div>
+	</div>
+</section>
+{/if}
+
+<!-- ═══════════════════════════════════════════════════════
+     NEWSLETTER CTA
+     ═══════════════════════════════════════════════════════ -->
+<section class="py-14 sm:py-20 bg-gradient-to-r from-pink-bright/10 to-pink-dark/10">
+	<div class="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+		<h2 class="text-2xl sm:text-3xl font-display mb-3" style="color: var(--text-primary);">Get Exclusive Deals</h2>
+		<p class="mb-6 text-sm sm:text-base" style="color: var(--text-muted);">
+			Be the first to know about product drops, sale alerts, and stylist tips. No spam — just the good stuff.
+		</p>
+		<form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+			<input 
+				type="email"
+				placeholder="you@email.com"
+				class="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:border-pink-bright text-sm"
+				style="background-color: var(--bg-input); border-color: var(--border-color); color: var(--text-primary);"
+			/>
+			<button 
+				type="submit"
+				class="px-6 py-3 bg-pink-bright font-semibold rounded-lg hover:bg-pink-medium transition-colors text-sm whitespace-nowrap"
+				style="color: var(--text-inverse);"
+			>
+				Subscribe
+			</button>
+		</form>
+	</div>
+</section>
