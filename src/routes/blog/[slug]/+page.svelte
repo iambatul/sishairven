@@ -89,7 +89,7 @@
     schema={breadcrumbSchema}
   />
 
-  <article class="min-h-screen bg-black">
+  <article class="min-h-screen bg-[var(--bg-primary)]">
     <!-- Hero -->
     <header class="relative py-20 bg-gradient-to-b from-pink-bright/10 to-black">
       <div class="max-w-4xl mx-auto px-4">
@@ -105,7 +105,7 @@
               {:else}
                 <a 
                   href={lang.url}
-                  class="px-3 py-1 bg-black-soft text-gray-300 text-sm rounded-full hover:bg-gray-dark hover:text-white transition-colors"
+                  class="px-3 py-1 bg-[var(--bg-secondary)] text-gray-300 text-sm rounded-full hover:bg-gray-dark hover:text-[var(--text-primary)] transition-colors"
                 >
                   {lang.name}
                 </a>
@@ -116,12 +116,12 @@
         
         <!-- Breadcrumbs -->
         <nav class="mb-6" aria-label="Breadcrumb">
-          <ol class="flex items-center text-sm text-gray-medium">
+          <ol class="flex items-center text-sm text-[var(--text-muted)]">
             <li><a href="/" class="hover:text-pink-bright transition-colors">{$_('nav.home')}</a></li>
             <li class="mx-2">/</li>
             <li><a href="/blog" class="hover:text-pink-bright transition-colors">{$_('nav.blog')}</a></li>
             <li class="mx-2">/</li>
-            <li class="text-gray-light truncate max-w-[200px]">{post.title}</li>
+            <li class="text-[var(--text-secondary)] truncate max-w-[200px]">{post.title}</li>
           </ol>
         </nav>
         
@@ -133,16 +133,16 @@
           {post.category}
         </a>
         
-        <h1 class="text-3xl md:text-5xl font-display text-white mb-6 leading-tight">{post.title}</h1>
+        <h1 class="text-3xl md:text-5xl font-display text-[var(--text-primary)] mb-6 leading-tight">{post.title}</h1>
         
         <!-- Meta -->
-        <div class="flex flex-wrap items-center gap-6 text-gray-medium">
+        <div class="flex flex-wrap items-center gap-6 text-[var(--text-muted)]">
           <div class="flex items-center">
             <span class="w-10 h-10 bg-pink-bright/20 rounded-full flex items-center justify-center text-pink-bright font-bold mr-3">
               {post.author.charAt(0)}
             </span>
             <div>
-              <p class="text-white font-medium">{post.author}</p>
+              <p class="text-[var(--text-primary)] font-medium">{post.author}</p>
               <p class="text-sm">{$_('blog.by_author', { values: { author: post.author } })}</p>
             </div>
           </div>
@@ -157,21 +157,21 @@
     <!-- Content -->
     <section class="py-12">
       <div class="max-w-4xl mx-auto px-4">
-        <div class="bg-black-soft/30 rounded-lg p-6 md:p-12 border border-gray-dark">
+        <div class="bg-[var(--bg-tertiary)] rounded-lg p-6 md:p-12 border border-[var(--border-color)]">
           <PostContent />
         </div>
       </div>
     </section>
 
     <!-- Tags -->
-    <section class="py-8 border-t border-gray-dark">
+    <section class="py-8 border-t border-[var(--border-color)]">
       <div class="max-w-4xl mx-auto px-4">
         <div class="flex flex-wrap items-center gap-3">
-          <span class="text-gray-medium">{$_('blog.tags')}:</span>
+          <span class="text-[var(--text-muted)]">{$_('blog.tags')}:</span>
           {#each post.tags as tag}
             <a 
               href="/blog?tag={tag}" 
-              class="px-3 py-1 bg-black-soft text-gray-light rounded-full text-sm hover:bg-pink-bright/20 hover:text-pink-bright transition-colors"
+              class="px-3 py-1 bg-[var(--bg-secondary)] text-[var(--text-secondary)] rounded-full text-sm hover:bg-pink-bright/20 hover:text-pink-bright transition-colors"
             >
               {tag}
             </a>
@@ -182,13 +182,13 @@
 
     <!-- Related Posts -->
     {#if relatedPosts.length > 0}
-      <section class="py-16 bg-black-soft/30">
+      <section class="py-16 bg-[var(--bg-tertiary)]">
         <div class="max-w-7xl mx-auto px-4">
-          <h2 class="text-2xl font-display text-white mb-8">{$_('blog.related_articles')}</h2>
+          <h2 class="text-2xl font-display text-[var(--text-primary)] mb-8">{$_('blog.related_articles')}</h2>
           <div class="grid md:grid-cols-3 gap-6">
             {#each relatedPosts as related}
               <a href="/blog/{related.slug}" class="group">
-                <article class="bg-black-soft/50 rounded-lg overflow-hidden border border-gray-dark group-hover:border-pink-bright/40 transition-all duration-300 h-full">
+                <article class="bg-[var(--bg-card)] rounded-lg overflow-hidden border border-[var(--border-color)] group-hover:border-pink-bright/40 transition-all duration-300 h-full">
                   <div class="aspect-video bg-gradient-to-br from-pink-bright/20 to-pink-dark/20 flex items-center justify-center">
                     <span class="text-4xl">
                       {#if related.category === 'Reviews'}
@@ -202,9 +202,9 @@
                   </div>
                   <div class="p-5">
                     <span class="text-xs text-pink-bright font-medium">{related.category}</span>
-                    <h3 class="text-white font-medium mt-2 group-hover:text-pink-bright transition-colors line-clamp-2">{related.title}</h3>
-                    <p class="text-gray-medium text-sm mt-2 line-clamp-2">{related.description}</p>
-                    <div class="flex items-center gap-3 mt-4 text-xs text-gray-medium">
+                    <h3 class="text-[var(--text-primary)] font-medium mt-2 group-hover:text-pink-bright transition-colors line-clamp-2">{related.title}</h3>
+                    <p class="text-[var(--text-muted)] text-sm mt-2 line-clamp-2">{related.description}</p>
+                    <div class="flex items-center gap-3 mt-4 text-xs text-[var(--text-muted)]">
                       <span>{$_('blog.read_time', { values: { minutes: related.readingTime } })}</span>
                     </div>
                   </div>
@@ -219,15 +219,15 @@
     <!-- Newsletter -->
     <section class="py-16">
       <div class="max-w-2xl mx-auto px-4 text-center">
-        <h2 class="text-2xl font-display text-white mb-4">{$_('blog.newsletter_cta')}</h2>
-        <p class="text-gray-light mb-8">
+        <h2 class="text-2xl font-display text-[var(--text-primary)] mb-4">{$_('blog.newsletter_cta')}</h2>
+        <p class="text-[var(--text-secondary)] mb-8">
           {$_('blog.subscribe_prompt')}
         </p>
         <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <input 
             type="email" 
             placeholder={$_('forms.email')}
-            class="flex-1 px-4 py-3 bg-black-soft border border-gray-dark rounded-lg text-white placeholder-gray-medium focus:border-pink-bright focus:outline-none"
+            class="flex-1 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] placeholder-gray-medium focus:border-pink-bright focus:outline-none"
           />
           <button 
             type="submit"
@@ -242,8 +242,8 @@
     <!-- CTA -->
     <section class="py-16 bg-gradient-to-r from-pink-bright/10 via-black to-pink-bright/10">
       <div class="max-w-4xl mx-auto px-4 text-center">
-        <h2 class="text-3xl font-display text-white mb-4">Ready to Transform Your Hair?</h2>
-        <p class="text-gray-light mb-8 max-w-2xl mx-auto">
+        <h2 class="text-3xl font-display text-[var(--text-primary)] mb-4">Ready to Transform Your Hair?</h2>
+        <p class="text-[var(--text-secondary)] mb-8 max-w-2xl mx-auto">
           Visit Hairven by Elyn for professional services, or shop our curated selection of salon-quality products.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -259,11 +259,11 @@
   </article>
 {:else}
   <!-- 404 State -->
-  <div class="min-h-screen bg-black flex items-center justify-center px-4">
+  <div class="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center px-4">
     <div class="text-center max-w-md">
       <div class="text-6xl mb-4">📖</div>
-      <h1 class="text-4xl font-display text-white mb-4">{$_('errors.404_title')}</h1>
-      <p class="text-gray-medium mb-8">
+      <h1 class="text-4xl font-display text-[var(--text-primary)] mb-4">{$_('errors.404_title')}</h1>
+      <p class="text-[var(--text-muted)] mb-8">
         {$_('errors.404_message')}
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">

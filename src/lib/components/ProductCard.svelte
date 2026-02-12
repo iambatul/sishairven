@@ -17,7 +17,7 @@
     href={amazonUrl}
     target="_blank"
     rel="noopener noreferrer sponsored"
-    class="flex items-center gap-4 bg-black-soft/50 p-3 rounded-lg border border-gray-dark hover:border-pink-bright/50 transition-all group"
+    class="flex items-center gap-4 bg-[var(--bg-card)] p-3 rounded-lg border border-[var(--border-color)] hover:border-pink-bright/50 transition-all group"
   >
     <img 
       src={product.imageUrl} 
@@ -26,19 +26,19 @@
       loading="lazy"
     />
     <div class="flex-1 min-w-0">
-      <h4 class="text-white font-medium text-sm truncate group-hover:text-pink-bright transition-colors">
+      <h4 class="text-[var(--text-primary)] font-medium text-sm truncate group-hover:text-pink-bright transition-colors">
         {product.title}
       </h4>
       <div class="flex items-center gap-2 mt-1">
         <span class="text-yellow-400 text-xs">{stars}</span>
-        <span class="text-gray-medium text-xs">({product.reviewCount.toLocaleString()})</span>
+        <span class="text-[var(--text-muted)] text-xs">({product.reviewCount.toLocaleString()})</span>
       </div>
       <p class="text-pink-bright font-semibold text-sm mt-1">{product.price}</p>
     </div>
   </a>
 {:else}
   <!-- Full Version -->
-  <div class="bg-black-soft/50 rounded-lg overflow-hidden border border-gray-dark hover:border-pink-bright/50 transition-all duration-300 {featured ? 'ring-2 ring-pink-bright/30' : ''}">
+  <div class="bg-[var(--bg-card)] rounded-lg overflow-hidden border border-[var(--border-color)] hover:border-pink-bright/50 transition-all duration-300 {featured ? 'ring-2 ring-pink-bright/30' : ''}">
     <!-- Image -->
     <a 
       href={amazonUrl}
@@ -58,7 +58,7 @@
         </span>
       {/if}
       {#if product.prime}
-        <span class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">
+        <span class="absolute top-2 right-2 bg-blue-500 text-[var(--text-primary)] text-xs font-bold px-2 py-1 rounded">
           prime
         </span>
       {/if}
@@ -67,7 +67,7 @@
     <!-- Content -->
     <div class="p-5">
       <!-- Category -->
-      <span class="text-xs text-gray-medium uppercase tracking-wide">
+      <span class="text-xs text-[var(--text-muted)] uppercase tracking-wide">
         {product.category.replace('-', ' ')}
       </span>
 
@@ -78,7 +78,7 @@
         rel="noopener noreferrer sponsored"
         class="block mt-1"
       >
-        <h3 class="text-white font-semibold leading-tight hover:text-pink-bright transition-colors line-clamp-2">
+        <h3 class="text-[var(--text-primary)] font-semibold leading-tight hover:text-pink-bright transition-colors line-clamp-2">
           {product.title}
         </h3>
       </a>
@@ -86,14 +86,14 @@
       <!-- Rating -->
       <div class="flex items-center gap-2 mt-2">
         <span class="text-yellow-400 text-sm">{stars}</span>
-        <span class="text-gray-medium text-sm">{product.rating}</span>
+        <span class="text-[var(--text-muted)] text-sm">{product.rating}</span>
         <span class="text-gray-dark">•</span>
-        <span class="text-gray-medium text-sm">{product.reviewCount.toLocaleString()} reviews</span>
+        <span class="text-[var(--text-muted)] text-sm">{product.reviewCount.toLocaleString()} reviews</span>
       </div>
 
       <!-- Description -->
       {#if showDescription}
-        <p class="text-gray-light text-sm mt-3 line-clamp-2">
+        <p class="text-[var(--text-secondary)] text-sm mt-3 line-clamp-2">
           {product.description}
         </p>
       {/if}
@@ -102,7 +102,7 @@
       {#if product.features && product.features.length > 0 && !compact}
         <ul class="mt-3 space-y-1">
           {#each product.features.slice(0, 3) as feature}
-            <li class="text-gray-light text-xs flex items-start">
+            <li class="text-[var(--text-secondary)] text-xs flex items-start">
               <span class="text-pink-bright mr-2">✓</span>
               {feature}
             </li>
@@ -112,7 +112,7 @@
 
       <!-- Price & CTA -->
       <div class="mt-4 flex items-center justify-between">
-        <span class="text-xl font-bold text-white">{product.price}</span>
+        <span class="text-xl font-bold text-[var(--text-primary)]">{product.price}</span>
         <a 
           href={amazonUrl}
           target="_blank"
@@ -124,7 +124,7 @@
       </div>
 
       <!-- Affiliate Disclosure -->
-      <p class="text-gray-medium text-xs mt-3 italic">
+      <p class="text-[var(--text-muted)] text-xs mt-3 italic">
         As an Amazon Associate, we earn from qualifying purchases.
       </p>
     </div>

@@ -66,12 +66,12 @@
 	description="Explore our full range of hair, nail, and beauty services at Hairven by Elyn. French Balayage specialists in Cortland, NY."
 />
 
-<div class="min-h-screen bg-black">
+<div class="min-h-screen bg-[var(--bg-primary)]">
 	<!-- Hero -->
 	<section class="relative py-20 bg-gradient-to-b from-pink-bright/10 to-black">
 		<div class="max-w-4xl mx-auto px-4 text-center">
 			<h1 class="text-5xl md:text-6xl font-handwritten text-pink-bright mb-6">Our Services</h1>
-			<p class="text-xl text-gray-light max-w-2xl mx-auto">
+			<p class="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto">
 				From French Balayage to relaxing spa treatments, discover services designed to enhance your natural beauty.
 			</p>
 		</div>
@@ -82,14 +82,14 @@
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="grid md:grid-cols-2 gap-8">
 				{#each services as service}
-					<div class="bg-black-soft/50 rounded-lg p-8 border border-pink-bright/20">
+					<div class="bg-[var(--bg-card)] rounded-lg p-8 border border-[var(--border-accent)]">
 						<div class="text-4xl mb-4">{service.icon}</div>
-						<h2 class="text-2xl font-display text-white mb-3">{service.title}</h2>
-						<p class="text-gray-medium mb-6">{service.description}</p>
+						<h2 class="text-2xl font-display text-[var(--text-primary)] mb-3">{service.title}</h2>
+						<p class="text-[var(--text-muted)] mb-6">{service.description}</p>
 						
 						<ul class="space-y-3 mb-6">
 							{#each service.items as item}
-								<li class="flex justify-between text-gray-light">
+								<li class="flex justify-between text-[var(--text-secondary)]">
 									<span>{item.name}</span>
 									<span class="text-pink-bright font-medium">{item.price}</span>
 								</li>
@@ -104,8 +104,8 @@
 	<!-- Specialization -->
 	<section class="py-16 bg-pink-bright/10">
 		<div class="max-w-4xl mx-auto px-4 text-center">
-			<h2 class="text-3xl font-display text-white mb-6">French Balayage Specialists</h2>
-			<p class="text-gray-light mb-8">
+			<h2 class="text-3xl font-display text-[var(--text-primary)] mb-6">French Balayage Specialists</h2>
+			<p class="text-[var(--text-secondary)] mb-8">
 				Our signature service. The French technique of Balayage creates a natural, sun-kissed look 
 				with softer, less noticeable regrowth lines. Our stylists are trained in this art form 
 				to give you that perfect, effortless glow.
@@ -119,8 +119,8 @@
 	<!-- CTA -->
 	<section class="py-16">
 		<div class="max-w-4xl mx-auto px-4 text-center">
-			<h2 class="text-3xl font-display text-white mb-6">Ready to Book?</h2>
-			<p class="text-gray-light mb-8">
+			<h2 class="text-3xl font-display text-[var(--text-primary)] mb-6">Ready to Book?</h2>
+			<p class="text-[var(--text-secondary)] mb-8">
 				Contact us to schedule your appointment or consultation.
 			</p>
 			<div class="flex flex-col sm:flex-row gap-4 justify-center">
