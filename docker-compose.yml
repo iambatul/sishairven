@@ -1,126 +1,32 @@
-# =============================================================================
-# HAIRVEN SALON - DOCKER COMPOSE CONFIGURATION
-# =============================================================================
-# Production-ready Docker Compose setup with:
-# - Automatic restarts
-# - Health checks
-# - Volume persistence
-# - Environment configuration
-# =============================================================================
-
 services:
-  hairven:
+  sishairven:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-    image: hairven-salon:latest
-    container_name: hairven-salon
-    
-    # Port mapping (host:container)
+    container_name: sishairven-app
+    restart: unless-stopped
     ports:
       - "3000:3000"
-    
-    # Volume mounts for persistence
-    volumes:
-      # Data directory for SQLite database
-      - hairven_data:/data
-      # Logs directory
-      - hairven_logs:/app/logs
-    
-    # Environment variables
     environment:
       - NODE_ENV=production
       - PORT=3000
       - HOST=0.0.0.0
       - DB_PATH=/data/appointments.db
-    
-    # Load from .env file
     env_file:
       - .env
-    
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-    
-    # Restart policy
-    restart: unless-stopped
-    
-    # Health check
+    volumes:
+      - ./data:/data
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/healthz').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    
-    # Security options
     security_opt:
       - no-new-privileges:true
-    
-    # Read-only root filesystem (additional security)
-    read_only: true
-    
-    # tmpfs for temporary files
-    tmpfs:
-      - /tmp:noexec,nosuid,size=100m
-    
-    # Networks
-    networks:
-      - hairven-network
-
-  # Optional: Caddy reverse proxy
-  caddy:
-    image: caddy:2-alpine
-    container_name: hairven-caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - hairven-network
-    depends_on:
-      hairven:
-        condition: service_healthy
-    profiles:
-      - with-caddy
-
-  # Optional: Redis for session storage (if needed)
-  redis:
-    image: redis:7-alpine
-    container_name: hairven-redis
-    restart: unless-stopped
-    volumes:
-      - redis_data:/data
-    networks:
-      - hairven-network
-    profiles:
-      - with-redis
-
-# Named volumes for persistence
-volumes:
-  hairven_data:
-    driver: local
-  hairven_logs:
-    driver: local
-  caddy_data:
-    driver: local
-  caddy_config:
-    driver: local
-  redis_data:
-    driver: local
-
-# Networks
-networks:
-  hairven-network:
-    driver: bridge
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
