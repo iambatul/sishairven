@@ -4,96 +4,127 @@
 
 <SEO 
 	title="About Us"
-	description="Meet the team behind Hairven by Elyn. Professional stylists who test every product before recommending it to you. Honest reviews, real expertise."
+	description="The story behind Hairven by Elyn — from a small-town salon in Cortland, NY to a trusted voice in hair care. Meet the stylists behind the reviews."
 />
 
 <div class="min-h-screen" style="background-color: var(--bg-primary);">
 	<!-- Hero -->
 	<section class="relative py-14 sm:py-20 bg-gradient-to-b from-pink-bright/10">
 		<div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-			<h1 class="text-4xl sm:text-5xl md:text-6xl font-handwritten text-pink-bright mb-4 sm:mb-6">About Hairven by Elyn</h1>
-			<p class="text-base sm:text-xl max-w-2xl mx-auto" style="color: var(--text-secondary);">
-				Real stylists. Real testing. Honest picks.
+			<h1 class="text-4xl sm:text-5xl md:text-6xl font-handwritten text-pink-bright mb-4 sm:mb-6">Our Story</h1>
+			<p class="text-base sm:text-lg max-w-2xl mx-auto" style="color: var(--text-secondary);">
+				From behind the chair to behind the screen — how a salon in upstate New York became a trusted name in hair care.
 			</p>
 		</div>
 	</section>
 
-	<!-- Our Story -->
+	<!-- The Story -->
 	<section class="py-12 sm:py-16">
-		<div class="max-w-4xl mx-auto px-4 sm:px-6">
-			<div class="grid md:grid-cols-2 gap-8 sm:gap-12 items-start">
-				<div>
-					<h2 class="text-2xl sm:text-3xl font-display mb-4 sm:mb-6" style="color: var(--text-primary);">Our Story</h2>
-					<div class="space-y-4 text-sm sm:text-base" style="color: var(--text-secondary);">
-						<p>
-							<strong class="text-pink-bright">Hairven by Elyn</strong> started as a salon in Cortland, NY — and the products we use on our clients every day became the foundation of this site.
-						</p>
-						<p>
-							After years of clients asking "What shampoo do you use?" and "Which hair dryer should I buy?", we decided to build something useful: a curated collection of the exact tools and treatments we trust in the chair.
-						</p>
-						<p>
-							Every product on this site has been used on real clients, in a real salon, by working stylists. If it doesn't hold up under professional use, it doesn't make the cut.
-						</p>
-					</div>
+		<div class="max-w-3xl mx-auto px-4 sm:px-6">
+			<div class="space-y-6 text-sm sm:text-base leading-relaxed" style="color: var(--text-secondary);">
+				<p>
+					It started with a question nobody could answer.
+				</p>
+				<p>
+					Elina Makna — everyone calls her Elyn — grew up in New York with a pair of scissors in one hand and a dream in the other. She wasn't born into money. She wasn't handed a business. What she had was a gift for making people feel like the best version of themselves, and a stubborn belief that small-town girls could build something real.
+				</p>
+				<p>
+					In 2018, she opened <strong class="text-pink-bright">Hairven by Elyn</strong> on Owego Street in Cortland, NY. Not in Manhattan. Not in LA. In a small college town where everyone knows your name and word of mouth is the only marketing that matters.
+				</p>
+				<p>
+					And word spread fast.
+				</p>
+				<p>
+					Clients started driving from Syracuse, Ithaca, Binghamton — sometimes two hours each way — just to sit in her chair. She became known for French Balayage, the kind of sun-kissed color that looks like you were born with it. But what really set her apart wasn't just technique. It was honesty.
+				</p>
+
+				<div class="my-8 sm:my-10 p-5 sm:p-8 rounded-lg border-l-4 border-pink-bright" style="background-color: var(--bg-tertiary);">
+					<p class="italic text-base sm:text-lg" style="color: var(--text-primary);">
+						"I'm not going to sell you a $60 shampoo if a $12 one does the same thing. That's not how I was raised."
+					</p>
+					<p class="mt-3 text-sm text-pink-bright font-medium">— Elyn</p>
 				</div>
-				<div class="theme-card p-6 sm:p-8">
-					<h3 class="text-xl sm:text-2xl font-handwritten text-pink-bright mb-4">How We Pick Products</h3>
-					<ul class="space-y-4" style="color: var(--text-secondary);">
-						<li class="flex items-start gap-3">
-							<span class="text-pink-bright text-lg mt-0.5">01</span>
-							<div>
-								<strong class="text-sm sm:text-base" style="color: var(--text-primary);">We Test In-Salon</strong>
-								<p class="text-sm mt-1" style="color: var(--text-muted);">Every product gets weeks of real-world use before we review it.</p>
-							</div>
-						</li>
-						<li class="flex items-start gap-3">
-							<span class="text-pink-bright text-lg mt-0.5">02</span>
-							<div>
-								<strong class="text-sm sm:text-base" style="color: var(--text-primary);">We Compare Honestly</strong>
-								<p class="text-sm mt-1" style="color: var(--text-muted);">We'll tell you when a $40 tool outperforms a $400 one.</p>
-							</div>
-						</li>
-						<li class="flex items-start gap-3">
-							<span class="text-pink-bright text-lg mt-0.5">03</span>
-							<div>
-								<strong class="text-sm sm:text-base" style="color: var(--text-primary);">We Update Regularly</strong>
-								<p class="text-sm mt-1" style="color: var(--text-muted);">Reviews are refreshed as we discover better options.</p>
-							</div>
-						</li>
-						<li class="flex items-start gap-3">
-							<span class="text-pink-bright text-lg mt-0.5">04</span>
-							<div>
-								<strong class="text-sm sm:text-base" style="color: var(--text-primary);">We Disclose Everything</strong>
-								<p class="text-sm mt-1" style="color: var(--text-muted);">We earn from Amazon links — you pay zero extra. Full transparency.</p>
-							</div>
-						</li>
-					</ul>
+
+				<p>
+					See, here's the thing about working in a salon: every single day, someone asks you what products to use. What hair dryer should I buy? Is Olaplex really worth it? My hair is falling apart — what do I do?
+				</p>
+				<p>
+					And most of the time, the answer you get from the internet is garbage. Sponsored posts. Fake reviews. Influencers who've never touched a blow dryer in their professional life telling you to spend $400 on something that's no better than what's at Target.
+				</p>
+				<p>
+					That drove Elyn crazy.
+				</p>
+				<p>
+					So she started keeping notes. Every product that came through the salon — she'd test it. On herself first, then on clients who were willing. She'd track how it performed over weeks, not minutes. How it held up in humidity. How it looked after the third wash. Whether it actually delivered on the promises printed on the bottle.
+				</p>
+				<p>
+					Those notes became this site.
+				</p>
+				<p>
+					<strong class="text-pink-bright">Hairven by Elyn</strong> is what happens when a working stylist gets tired of the noise and decides to just tell people the truth. Every product you see here has been used on real clients, in a real salon, under real conditions. If it made the cut, it's here. If it didn't, it's not — no matter how much the brand wanted us to feature it.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- What Makes Us Different -->
+	<section class="py-12 sm:py-16" style="background-color: var(--bg-tertiary);">
+		<div class="max-w-5xl mx-auto px-4 sm:px-6">
+			<h2 class="text-2xl sm:text-3xl font-display text-center mb-8 sm:mb-12" style="color: var(--text-primary);">What Makes Us Different</h2>
+			<div class="grid sm:grid-cols-2 gap-6 sm:gap-8">
+				<div class="theme-card p-5 sm:p-6">
+					<div class="text-2xl mb-3">🪑</div>
+					<h3 class="font-semibold mb-2 text-sm sm:text-base" style="color: var(--text-primary);">We Actually Use This Stuff</h3>
+					<p class="text-sm" style="color: var(--text-muted);">Every product gets tested on real clients over real time. Not a 30-second demo for a camera. Weeks of use, multiple hair types, honest results.</p>
+				</div>
+				<div class="theme-card p-5 sm:p-6">
+					<div class="text-2xl mb-3">🚫</div>
+					<h3 class="font-semibold mb-2 text-sm sm:text-base" style="color: var(--text-primary);">No Pay-to-Play</h3>
+					<p class="text-sm" style="color: var(--text-muted);">We don't accept money from brands to feature their products. If something's on this site, it's because it earned its spot — not because someone wrote us a check.</p>
+				</div>
+				<div class="theme-card p-5 sm:p-6">
+					<div class="text-2xl mb-3">💬</div>
+					<h3 class="font-semibold mb-2 text-sm sm:text-base" style="color: var(--text-primary);">Straight Talk</h3>
+					<p class="text-sm" style="color: var(--text-muted);">We'll tell you when the expensive option isn't worth it. We'll tell you when the cheap option is actually great. No fluff, no corporate speak.</p>
+				</div>
+				<div class="theme-card p-5 sm:p-6">
+					<div class="text-2xl mb-3">💸</div>
+					<h3 class="font-semibold mb-2 text-sm sm:text-base" style="color: var(--text-primary);">Same Price, Always</h3>
+					<p class="text-sm" style="color: var(--text-muted);">When you buy through our links, you pay the exact same Amazon price. We earn a small commission at zero extra cost to you. That's how we keep the lights on.</p>
 				</div>
 			</div>
 		</div>
 	</section>
 
 	<!-- Meet Elyn -->
-	<section class="py-12 sm:py-16" style="background-color: var(--bg-tertiary);">
-		<div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-			<h2 class="text-2xl sm:text-3xl font-display mb-4 sm:mb-6" style="color: var(--text-primary);">Meet Elyn</h2>
-			<div class="theme-card p-6 sm:p-8 text-left">
-				<p class="text-sm sm:text-base mb-4" style="color: var(--text-secondary);">
-					Elina "Elyn" Makna has been a licensed stylist for over 8 years, specializing in French Balayage, color correction, and transformative cuts. Born and raised in New York, she developed a passion for beauty that blends global influences with classic technique.
-				</p>
-				<p class="text-sm sm:text-base" style="color: var(--text-secondary);">
-					When she's not behind the chair, she's testing the latest tools, writing reviews, and helping people find the right products for their hair type — without the inflated marketing speak.
-				</p>
+	<section class="py-12 sm:py-16">
+		<div class="max-w-3xl mx-auto px-4 sm:px-6">
+			<h2 class="text-2xl sm:text-3xl font-display mb-6 sm:mb-8 text-center" style="color: var(--text-primary);">Meet Elyn</h2>
+			<div class="theme-card p-5 sm:p-8">
+				<div class="space-y-4 text-sm sm:text-base" style="color: var(--text-secondary);">
+					<p>
+						Elina Makna is a licensed cosmetologist with over 8 years behind the chair. She specializes in French Balayage, color correction, and the kind of transformative cuts that make people cry happy tears in the mirror.
+					</p>
+					<p>
+						She's the person who will tell you your hair needs a break before she'll agree to bleach it again. The one who remembers your kid's name and asks about your dog. The one who stays late because she refuses to rush a client out the door.
+					</p>
+					<p>
+						When she's not in the salon, she's testing products, writing reviews, and trying to cut through the noise in an industry that has way too much of it.
+					</p>
+					<p class="text-pink-bright font-medium">
+						Based in Cortland, NY. Powered by coffee and an unreasonable number of hair clips.
+					</p>
+				</div>
 			</div>
 		</div>
 	</section>
 
 	<!-- CTA -->
-	<section class="py-12 sm:py-16">
-		<div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-			<h2 class="text-2xl sm:text-3xl font-display mb-3" style="color: var(--text-primary);">Ready to Find Your Products?</h2>
+	<section class="py-12 sm:py-16 bg-pink-bright/10">
+		<div class="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+			<h2 class="text-2xl sm:text-3xl font-display mb-3" style="color: var(--text-primary);">See What We Recommend</h2>
 			<p class="mb-6 text-sm sm:text-base" style="color: var(--text-muted);">
-				Browse our curated picks or dive into our latest reviews.
+				Explore our curated picks or read the honest reviews behind them.
 			</p>
 			<div class="flex flex-col sm:flex-row gap-3 justify-center">
 				<a href="/shop" class="px-8 py-3 bg-pink-bright font-semibold rounded-lg hover:bg-pink-medium transition-colors text-sm sm:text-base" style="color: var(--text-inverse);">

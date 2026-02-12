@@ -1,10 +1,8 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { browser } from '$app/environment';
   import SEO from '$lib/components/SEO.svelte';
-  import { locale, _ } from 'svelte-i18n';
-  import { getPostBySlug, getPublishedPosts, type BlogPost } from '$lib/content/posts';
-  import { generateBreadcrumbSchema } from '$lib/utils/seo';
+  import { getPostBySlug, getPublishedPosts, formatDate, type BlogPost } from '$lib/content/posts';
+  import { createAmazonLink } from '$lib/utils/amazon';
   
   // Import all blog post content components
   import BestHairDryers from '$lib/content/posts/best-hair-dryers-2025.svelte';
@@ -20,23 +18,15 @@
   const slug = $page.params.slug ?? '';
   const post = getPostBySlug(slug);
   
-  // Current language from i18n store
-  $: currentLang = ($locale || 'en').split('-')[0] as 'en' | 'es' | 'fr';
-  
-  // Get related posts (same category or shared tags, excluding current)
+  // Get related posts
   $: relatedPosts = post 
     ? getPublishedPosts()
-      .filter(p => {
-        if (p.slug === slug) return false;
-        if (p.category === post.category) return true;
-        if (p.tags.some(tag => post.tags.includes(tag))) return true;
-        return false;
-      })
-      .slice(0, 3)
+        .filter(p => p.slug !== slug && (p.category === post.category || p.tags.some(t => post.tags.includes(t))))
+        .slice(0, 3)
     : [];
   
-  // Dynamic component loading based on slug
-  const postComponents: Record<string, typeof DefaultPost> = {
+  // Dynamic component loading
+  const postComponents: Record<string, any> = {
     'best-hair-dryers-2025': BestHairDryers,
     'keratin-treatment-guide': KeratinGuide,
     'dyson-vs-ghd-vs-revlon': DysonVsGhd,
@@ -49,132 +39,80 @@
   
   $: PostContent = postComponents[slug] || DefaultPost;
   
-  // Language switcher state
-  $: languageUrls = [
-    { code: 'en', name: 'English', url: `/blog/${slug}`, active: currentLang === 'en' },
-    { code: 'es', name: 'Español', url: `/es/blog/${slug}`, active: currentLang === 'es' },
-    { code: 'fr', name: 'Français', url: `/fr/blog/${slug}`, active: currentLang === 'fr' },
-  ];
-  
-  $: breadcrumbSchema = post ? generateBreadcrumbSchema([
-    { name: $_('nav.home'), path: '/' },
-    { name: $_('nav.blog'), path: '/blog' },
-    { name: post.title, path: `/blog/${post.slug}` }
-  ]) : null;
-  
-  // Format date based on locale
-  function formatLocalizedDate(dateString: string, lang: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-  
-  // Get reading time text
-  $: readingTimeText = post 
-    ? $_('blog.read_time', { values: { minutes: post.readingTime } })
-    : '';
+  $: readingTimeText = post ? `${post.readingTime} min read` : '';
 </script>
 
 {#if post}
   <SEO 
     title={post.title}
     description={post.description}
+    path="/blog/{post.slug}"
     type="article"
     published={post.date}
-    modified={post.modified}
     author={post.author}
-    schema={breadcrumbSchema}
   />
 
-  <article class="min-h-screen bg-[var(--bg-primary)]">
-    <!-- Hero -->
-    <header class="relative py-20 bg-gradient-to-b from-pink-bright/10 to-black">
-      <div class="max-w-4xl mx-auto px-4">
-        <!-- Language Switcher -->
-        <div class="mb-6 flex items-center gap-2 flex-wrap">
-          <span class="text-sm text-gray-400">{$_('language.select')}:</span>
-          <div class="flex gap-2">
-            {#each languageUrls as lang}
-              {#if lang.active}
-                <span class="px-3 py-1 bg-pink-bright text-black text-sm font-medium rounded-full">
-                  {lang.name}
-                </span>
-              {:else}
-                <a 
-                  href={lang.url}
-                  class="px-3 py-1 bg-[var(--bg-secondary)] text-gray-300 text-sm rounded-full hover:bg-gray-dark hover:text-[var(--text-primary)] transition-colors"
-                >
-                  {lang.name}
-                </a>
-              {/if}
-            {/each}
-          </div>
-        </div>
-        
+  <article style="background-color: var(--bg-primary);">
+    <!-- Header -->
+    <header class="py-10 sm:py-16 border-b" style="border-color: var(--border-color);">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6">
         <!-- Breadcrumbs -->
         <nav class="mb-6" aria-label="Breadcrumb">
-          <ol class="flex items-center text-sm text-[var(--text-muted)]">
-            <li><a href="/" class="hover:text-pink-bright transition-colors">{$_('nav.home')}</a></li>
+          <ol class="flex items-center text-sm" style="color: var(--text-muted);">
+            <li><a href="/" class="hover:text-pink-bright transition-colors">Home</a></li>
             <li class="mx-2">/</li>
-            <li><a href="/blog" class="hover:text-pink-bright transition-colors">{$_('nav.blog')}</a></li>
+            <li><a href="/blog" class="hover:text-pink-bright transition-colors">Blog</a></li>
             <li class="mx-2">/</li>
-            <li class="text-[var(--text-secondary)] truncate max-w-[200px]">{post.title}</li>
+            <li class="truncate max-w-[200px]" style="color: var(--text-secondary);">{post.title}</li>
           </ol>
         </nav>
         
         <!-- Category -->
         <a 
-          href="/blog?category={post.category.toLowerCase()}" 
-          class="inline-block px-4 py-1 bg-pink-bright/10 text-pink-bright text-sm font-medium rounded-full mb-4 hover:bg-pink-bright/20 transition-colors"
+          href="/blog" 
+          class="inline-block px-3 sm:px-4 py-1 bg-pink-bright/10 text-pink-bright text-xs sm:text-sm font-medium rounded-full mb-4 hover:bg-pink-bright/20 transition-colors"
         >
           {post.category}
         </a>
         
-        <h1 class="text-3xl md:text-5xl font-display text-[var(--text-primary)] mb-6 leading-tight">{post.title}</h1>
+        <h1 class="text-2xl sm:text-3xl md:text-5xl font-display mb-4 sm:mb-6 leading-tight" style="color: var(--text-primary);">{post.title}</h1>
         
         <!-- Meta -->
-        <div class="flex flex-wrap items-center gap-6 text-[var(--text-muted)]">
+        <div class="flex flex-wrap items-center gap-4 sm:gap-6" style="color: var(--text-muted);">
           <div class="flex items-center">
-            <span class="w-10 h-10 bg-pink-bright/20 rounded-full flex items-center justify-center text-pink-bright font-bold mr-3">
+            <span class="w-8 h-8 sm:w-10 sm:h-10 bg-pink-bright/20 rounded-full flex items-center justify-center text-pink-bright font-bold mr-2 sm:mr-3 text-sm sm:text-base">
               {post.author.charAt(0)}
             </span>
             <div>
-              <p class="text-[var(--text-primary)] font-medium">{post.author}</p>
-              <p class="text-sm">{$_('blog.by_author', { values: { author: post.author } })}</p>
+              <p class="font-medium text-sm sm:text-base" style="color: var(--text-primary);">{post.author}</p>
             </div>
           </div>
-          <div class="flex items-center gap-4 text-sm">
-            <span>📅 {formatLocalizedDate(post.date, currentLang)}</span>
-            <span>⏱️ {readingTimeText}</span>
+          <div class="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
+            <span>{formatDate(post.date)}</span>
+            <span>{readingTimeText}</span>
           </div>
         </div>
       </div>
     </header>
 
     <!-- Content -->
-    <section class="py-12">
-      <div class="max-w-4xl mx-auto px-4">
-        <div class="bg-[var(--bg-tertiary)] rounded-lg p-6 md:p-12 border border-[var(--border-color)]">
-          <PostContent />
+    <section class="py-8 sm:py-12">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6">
+        <div class="rounded-lg p-4 sm:p-6 md:p-12 border" style="background-color: var(--bg-tertiary); border-color: var(--border-color);">
+          <svelte:component this={PostContent} />
         </div>
       </div>
     </section>
 
     <!-- Tags -->
-    <section class="py-8 border-t border-[var(--border-color)]">
-      <div class="max-w-4xl mx-auto px-4">
-        <div class="flex flex-wrap items-center gap-3">
-          <span class="text-[var(--text-muted)]">{$_('blog.tags')}:</span>
+    <section class="py-6 sm:py-8 border-t" style="border-color: var(--border-color);">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <span class="text-sm" style="color: var(--text-muted);">Tags:</span>
           {#each post.tags as tag}
-            <a 
-              href="/blog?tag={tag}" 
-              class="px-3 py-1 bg-[var(--bg-secondary)] text-[var(--text-secondary)] rounded-full text-sm hover:bg-pink-bright/20 hover:text-pink-bright transition-colors"
-            >
+            <span class="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm" style="background-color: var(--bg-secondary); color: var(--text-secondary);">
               {tag}
-            </a>
+            </span>
           {/each}
         </div>
       </div>
@@ -182,33 +120,23 @@
 
     <!-- Related Posts -->
     {#if relatedPosts.length > 0}
-      <section class="py-16 bg-[var(--bg-tertiary)]">
-        <div class="max-w-7xl mx-auto px-4">
-          <h2 class="text-2xl font-display text-[var(--text-primary)] mb-8">{$_('blog.related_articles')}</h2>
-          <div class="grid md:grid-cols-3 gap-6">
+      <section class="py-10 sm:py-16" style="background-color: var(--bg-tertiary);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <h2 class="text-xl sm:text-2xl font-display mb-6 sm:mb-8" style="color: var(--text-primary);">You Might Also Like</h2>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {#each relatedPosts as related}
-              <a href="/blog/{related.slug}" class="group">
-                <article class="bg-[var(--bg-card)] rounded-lg overflow-hidden border border-[var(--border-color)] group-hover:border-pink-bright/40 transition-all duration-300 h-full">
-                  <div class="aspect-video bg-gradient-to-br from-pink-bright/20 to-pink-dark/20 flex items-center justify-center">
-                    <span class="text-4xl">
-                      {#if related.category === 'Reviews'}
-                        ⭐
-                      {:else if related.category === 'Guides'}
-                        📚
-                      {:else}
-                        💡
-                      {/if}
-                    </span>
-                  </div>
-                  <div class="p-5">
-                    <span class="text-xs text-pink-bright font-medium">{related.category}</span>
-                    <h3 class="text-[var(--text-primary)] font-medium mt-2 group-hover:text-pink-bright transition-colors line-clamp-2">{related.title}</h3>
-                    <p class="text-[var(--text-muted)] text-sm mt-2 line-clamp-2">{related.description}</p>
-                    <div class="flex items-center gap-3 mt-4 text-xs text-[var(--text-muted)]">
-                      <span>{$_('blog.read_time', { values: { minutes: related.readingTime } })}</span>
-                    </div>
-                  </div>
-                </article>
+              <a href="/blog/{related.slug}" class="theme-card group block">
+                <div class="aspect-video flex items-center justify-center" style="background: linear-gradient(135deg, rgba(255,20,147,0.15), rgba(199,21,133,0.15));">
+                  <span class="text-3xl sm:text-4xl">
+                    {related.category === 'Reviews' ? '⭐' : related.category === 'Guides' ? '📚' : '💡'}
+                  </span>
+                </div>
+                <div class="p-4 sm:p-5">
+                  <span class="text-xs text-pink-bright font-medium">{related.category}</span>
+                  <h3 class="font-medium mt-1.5 group-hover:text-pink-bright transition-colors text-sm sm:text-base line-clamp-2" style="color: var(--text-primary);">{related.title}</h3>
+                  <p class="text-xs sm:text-sm mt-2 line-clamp-2" style="color: var(--text-muted);">{related.description}</p>
+                  <span class="text-xs mt-3 inline-block" style="color: var(--text-muted);">{related.readingTime} min read</span>
+                </div>
               </a>
             {/each}
           </div>
@@ -216,62 +144,41 @@
       </section>
     {/if}
 
-    <!-- Newsletter -->
-    <section class="py-16">
-      <div class="max-w-2xl mx-auto px-4 text-center">
-        <h2 class="text-2xl font-display text-[var(--text-primary)] mb-4">{$_('blog.newsletter_cta')}</h2>
-        <p class="text-[var(--text-secondary)] mb-8">
-          {$_('blog.subscribe_prompt')}
-        </p>
-        <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-          <input 
-            type="email" 
-            placeholder={$_('forms.email')}
-            class="flex-1 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] placeholder-gray-medium focus:border-pink-bright focus:outline-none"
-          />
-          <button 
-            type="submit"
-            class="px-6 py-3 bg-pink-bright text-black font-semibold rounded-lg hover:bg-pink-medium transition-colors"
-          >
-            {$_('actions.subscribe')}
-          </button>
-        </form>
-      </div>
-    </section>
-
     <!-- CTA -->
-    <section class="py-16 bg-gradient-to-r from-pink-bright/10 via-black to-pink-bright/10">
-      <div class="max-w-4xl mx-auto px-4 text-center">
-        <h2 class="text-3xl font-display text-[var(--text-primary)] mb-4">Ready to Transform Your Hair?</h2>
-        <p class="text-[var(--text-secondary)] mb-8 max-w-2xl mx-auto">
-          Visit Hairven by Elyn for professional services, or shop our curated selection of salon-quality products.
+    <section class="py-10 sm:py-16 bg-pink-bright/10">
+      <div class="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+        <h2 class="text-xl sm:text-2xl font-display mb-3" style="color: var(--text-primary);">Find the Right Products</h2>
+        <p class="mb-6 text-sm sm:text-base" style="color: var(--text-muted);">
+          Browse our salon-tested picks or read more reviews from our team.
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/shop" class="px-8 py-4 border-2 border-pink-bright text-pink-bright font-semibold rounded-lg hover:bg-pink-bright hover:text-black transition-colors">
-            {$_('nav.shop')}
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="/shop" class="px-6 sm:px-8 py-3 bg-pink-bright font-semibold rounded-lg hover:bg-pink-medium transition-colors text-sm" style="color: var(--text-inverse);">
+            Shop Products
           </a>
-          <a href="/contact" class="px-8 py-4 bg-pink-bright text-black font-semibold rounded-lg hover:bg-pink-medium transition-colors">
-            {$_('nav.book')}
+          <a href="/blog" class="px-6 sm:px-8 py-3 border-2 border-pink-bright text-pink-bright font-semibold rounded-lg hover:bg-pink-bright hover:text-black transition-colors text-sm">
+            More Reviews
           </a>
         </div>
       </div>
     </section>
   </article>
+
 {:else}
   <!-- 404 State -->
-  <div class="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center px-4">
+  <SEO title="Post Not Found" description="The blog post you're looking for doesn't exist." />
+  <div class="min-h-screen flex items-center justify-center px-4" style="background-color: var(--bg-primary);">
     <div class="text-center max-w-md">
-      <div class="text-6xl mb-4">📖</div>
-      <h1 class="text-4xl font-display text-[var(--text-primary)] mb-4">{$_('errors.404_title')}</h1>
-      <p class="text-[var(--text-muted)] mb-8">
-        {$_('errors.404_message')}
+      <div class="text-5xl sm:text-6xl mb-4">📖</div>
+      <h1 class="text-3xl sm:text-4xl font-display mb-4" style="color: var(--text-primary);">Post Not Found</h1>
+      <p class="mb-8 text-sm sm:text-base" style="color: var(--text-muted);">
+        Sorry, we couldn't find that article. It may have been moved or removed.
       </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/blog" class="px-8 py-4 bg-pink-bright text-black font-semibold rounded-lg hover:bg-pink-medium transition-colors">
-          {$_('nav.blog')}
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="/blog" class="px-8 py-3 bg-pink-bright font-semibold rounded-lg hover:bg-pink-medium transition-colors text-sm" style="color: var(--text-inverse);">
+          All Articles
         </a>
-        <a href="/" class="px-8 py-4 border-2 border-pink-bright text-pink-bright font-semibold rounded-lg hover:bg-pink-bright hover:text-black transition-colors">
-          {$_('errors.go_home')}
+        <a href="/" class="px-8 py-3 border-2 border-pink-bright text-pink-bright font-semibold rounded-lg hover:bg-pink-bright hover:text-black transition-colors text-sm">
+          Go Home
         </a>
       </div>
     </div>
